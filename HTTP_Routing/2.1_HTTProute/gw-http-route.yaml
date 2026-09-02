@@ -1,0 +1,94 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: web-http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: nginx
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: coffee-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: web-http-gw
+      sectionName: nginx
+
+  hostnames:
+    - coffee.f5bnk.com
+
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /login
+
+      backendRefs:
+        - name: web-pool
+          kind: Pool
+          group: k8s.f5net.com
+
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: tea-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: web-http-gw
+      sectionName: nginx
+
+  hostnames:
+    - tea.f5bnk.com
+
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+          headers:
+            - type: Exact
+              name: env
+              value: canary
+
+      backendRefs:
+        - name: web-pool
+          kind: Pool
+          group: k8s.f5net.com
+
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /
+
+      backendRefs:
+        - name: web-pool
+          kind: Pool
+          group: k8s.f5net.com
+
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: web-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
