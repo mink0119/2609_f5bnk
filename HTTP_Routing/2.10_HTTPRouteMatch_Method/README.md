@@ -23,7 +23,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. GET
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X GET -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -33,7 +33,7 @@ curl -sS -D - -o /tmp/gw-body -X GET -H 'Host: coffee.f5bnk.com' http://40.30.20
 ### 2. POST
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X POST -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -X POST http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -43,7 +43,7 @@ curl -sS -D - -o /tmp/gw-body -X POST -H 'Host: coffee.f5bnk.com' http://40.30.2
 ### 3. 매칭 안 되는 method
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X PUT -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -X PUT http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

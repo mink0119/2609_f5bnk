@@ -22,7 +22,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. Exact 헤더 매칭
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -H 'env: canary' -H 'Host: tea.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve tea.f5bnk.com:80:40.30.20.20 -H 'env: canary' http://tea.f5bnk.com/
 ```
 
 **기대 응답**
@@ -32,7 +32,7 @@ curl -sS -D - -o /tmp/gw-body -H 'env: canary' -H 'Host: tea.f5bnk.com' http://4
 ### 2. 헤더 없음
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: tea.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve tea.f5bnk.com:80:40.30.20.20 http://tea.f5bnk.com/
 ```
 
 **기대 응답**
@@ -42,7 +42,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: tea.f5bnk.com' http://40.30.20.20/; ech
 ### 3. 값 불일치
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -H 'env: prod' -H 'Host: tea.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve tea.f5bnk.com:80:40.30.20.20 -H 'env: prod' http://tea.f5bnk.com/
 ```
 
 **기대 응답**

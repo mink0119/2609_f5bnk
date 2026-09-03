@@ -22,8 +22,7 @@ kubectl apply -f gw-grpc-route.yaml
 ### 1. 헤더 수정 후 호출
 
 ```bash
-grpcurl -plaintext -authority grpc.f5bnk.com \
-  -v 40.30.20.20:80 hello.HelloService/SayHello
+grpcurl -plaintext -authority grpc.f5bnk.com -v 40.30.20.20:80 hello.HelloService/SayHello
 ```
 
 **기대 응답**

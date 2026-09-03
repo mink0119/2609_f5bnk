@@ -23,7 +23,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. coffee /login
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/login; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/login
 ```
 
 **기대 응답**
@@ -33,7 +33,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/lo
 ### 2. coffee / 는 매칭 없음
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -42,7 +42,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; 
 ### 3. tea 기본
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: tea.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve tea.f5bnk.com:80:40.30.20.20 http://tea.f5bnk.com/
 ```
 
 **기대 응답**
@@ -52,7 +52,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: tea.f5bnk.com' http://40.30.20.20/; ech
 ### 4. tea canary 헤더
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -H 'env: canary' -H 'Host: tea.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve tea.f5bnk.com:80:40.30.20.20 -H 'env: canary' http://tea.f5bnk.com/
 ```
 
 **기대 응답**

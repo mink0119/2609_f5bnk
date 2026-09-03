@@ -23,7 +23,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. /login Exact
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/login; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/login
 ```
 
 **기대 응답**
@@ -33,7 +33,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/lo
 ### 2. /tea Exact
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/tea; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/tea
 ```
 
 **기대 응답**
@@ -43,7 +43,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/te
 ### 3. prefix 확장은 미매칭
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/login/extra; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/login/extra
 ```
 
 **기대 응답**
@@ -52,7 +52,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/lo
 ### 4. 루트 미매칭
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

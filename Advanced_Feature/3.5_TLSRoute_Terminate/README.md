@@ -30,7 +30,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. Terminate 후 HTTP 전달
 
 ```bash
-curl -sk --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
+curl -k --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -41,7 +41,7 @@ curl -sk --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
 ### 2. HTTP 80으로는 이 Listener 안 씀
 
 ```bash
-curl -sS -D - --max-time 3 -H 'Host: coffee.f5bnk.com' http://40.30.20.20/ || true
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

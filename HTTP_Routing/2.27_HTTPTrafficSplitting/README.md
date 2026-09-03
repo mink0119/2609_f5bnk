@@ -23,9 +23,9 @@ kubectl apply -f gw-http-route.yaml
 
 ```bash
 for i in $(seq 1 20); do
-  curl -sS -H 'Host: coffee.f5bnk.com' http://40.30.20.20/
+  curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
   echo
-done | sort | uniq -c
+done
 ```
 
 **기대 응답**

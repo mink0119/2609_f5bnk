@@ -22,7 +22,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. prefix /coffee
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/coffee; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/coffee
 ```
 
 **기대 응답**
@@ -32,7 +32,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/co
 ### 2. 하위 경로도 prefix 매칭
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/coffee/bar; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/coffee/bar
 ```
 
 **기대 응답**
@@ -42,7 +42,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/co
 ### 3. prefix /tea
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/tea/hot; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/tea/hot
 ```
 
 **기대 응답**
@@ -52,7 +52,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/te
 ### 4. 다른 prefix
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/other; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/other
 ```
 
 **기대 응답**

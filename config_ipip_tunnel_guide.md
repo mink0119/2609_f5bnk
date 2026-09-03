@@ -1,12 +1,6 @@
-# 2609_f5bnk
+# Config IPIP Tunnel Guide
 
-F5 BNK Gateway API PoC. HTTP/gRPC/TCP/UDP 테스트 YAML은 `HTTP_Routing/`, `Advanced_Feature/` 를 봅니다.
-
-VIP `40.30.20.20` 으로 들어가려면 TMM에 IPIP tunnel이 있어야 합니다. 수정하는 것은 **ConfigMap** 과 **DaemonSet 이미지** 두 개입니다.
-
----
-
-# TMM IPIP Tunnel
+TMM IPIP tunnel 설정. 수정하는 것은 **ConfigMap** 과 **DaemonSet 이미지** 두 개입니다.
 
 ## 구성
 
@@ -139,5 +133,5 @@ myipip           UNKNOWN        fe80::.../64
 ### 3. 클라이언트
 
 ```bash
-curl -sS -D - -H 'Host: coffee.f5bnk.com' http://40.30.20.20/
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```

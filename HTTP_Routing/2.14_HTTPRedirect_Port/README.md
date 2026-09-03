@@ -21,7 +21,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. port 변경
 
 ```bash
-curl -sS -D - -o /tmp/gw-body --max-redirs 0 -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

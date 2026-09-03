@@ -23,8 +23,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. 첫 요청 — 쿠키 발급
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -c /tmp/gw-cookie -H 'Host: coffee.f5bnk.com' http://40.30.20.20/
-echo; echo '--- cookies ---'; cat /tmp/gw-cookie
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -c /tmp/gw-cookie http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -36,9 +35,9 @@ echo; echo '--- cookies ---'; cat /tmp/gw-cookie
 
 ```bash
 for i in $(seq 1 10); do
-  curl -sS -b /tmp/gw-cookie -H 'Host: coffee.f5bnk.com' http://40.30.20.20/
+  curl --resolve coffee.f5bnk.com:80:40.30.20.20 -b /tmp/gw-cookie http://coffee.f5bnk.com/
   echo
-done | sort | uniq -c
+done
 ```
 
 **기대 응답**

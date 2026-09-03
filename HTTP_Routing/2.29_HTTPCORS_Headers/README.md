@@ -21,12 +21,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. preflight 허용 헤더
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X OPTIONS \
-  -H 'Host: coffee.f5bnk.com' \
-  -H 'Origin: https://shop.f5bnk.com' \
-  -H 'Access-Control-Request-Method: POST' \
-  -H 'Access-Control-Request-Headers: Content-Type, Authorization' \
-  http://40.30.20.20/; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -X OPTIONS -H 'Origin: https://shop.f5bnk.com' -H 'Access-Control-Request-Method: POST' -H 'Access-Control-Request-Headers: Content-Type, Authorization' http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -35,7 +30,7 @@ curl -sS -D - -o /tmp/gw-body -X OPTIONS \
 ### 2. 실제 요청 expose
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -H 'Origin: https://shop.f5bnk.com' -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -H 'Origin: https://shop.f5bnk.com' http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

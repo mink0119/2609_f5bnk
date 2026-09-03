@@ -21,7 +21,7 @@ kubectl apply -f gw-tls-route.yaml
 ### 1. e2e TLS
 
 ```bash
-curl -sk --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
+curl -k --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
 ```
 
 **기대 응답**

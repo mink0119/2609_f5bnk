@@ -22,11 +22,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. 허용 Origin preflight
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X OPTIONS \
-  -H 'Host: coffee.f5bnk.com' \
-  -H 'Origin: https://shop.f5bnk.com' \
-  -H 'Access-Control-Request-Method: POST' \
-  http://40.30.20.20/; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -X OPTIONS -H 'Origin: https://shop.f5bnk.com' -H 'Access-Control-Request-Method: POST' http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -37,7 +33,7 @@ curl -sS -D - -o /tmp/gw-body -X OPTIONS \
 ### 2. 허용 Origin GET
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -H 'Origin: https://shop.f5bnk.com' -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -H 'Origin: https://shop.f5bnk.com' http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -48,11 +44,7 @@ curl -sS -D - -o /tmp/gw-body -H 'Origin: https://shop.f5bnk.com' -H 'Host: coff
 ### 3. 비허용 Origin
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X OPTIONS \
-  -H 'Host: coffee.f5bnk.com' \
-  -H 'Origin: https://evil.example.com' \
-  -H 'Access-Control-Request-Method: POST' \
-  http://40.30.20.20/; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -X OPTIONS -H 'Origin: https://evil.example.com' -H 'Access-Control-Request-Method: POST' http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

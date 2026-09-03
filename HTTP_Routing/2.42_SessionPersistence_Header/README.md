@@ -23,7 +23,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. 세션 헤더 확인
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -33,12 +33,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; 
 ### 2. 같은 헤더로 고정
 
 ```bash
-SID=$(curl -sS -D - -o /tmp/gw-body -H 'Host: coffee.f5bnk.com' http://40.30.20.20/ | awk -F': ' 'tolower($1)=="x-session-id"{print $2}' | tr -d '\r')
-echo "SID=$SID"
-for i in $(seq 1 10); do
-  curl -sS -H 'Host: coffee.f5bnk.com' -H "X-Session-ID: $SID" http://40.30.20.20/
-  echo
-done | sort | uniq -c
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -H 'X-Session-ID: <id>' http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

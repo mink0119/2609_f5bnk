@@ -24,7 +24,7 @@ kubectl apply -f gw-tls-route.yaml
 ```bash
 openssl s_client -connect 40.30.20.20:443 -servername coffee.f5bnk.com -brief </dev/null
 # 또는
-curl -sk --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
+curl -k --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
 ```
 
 **기대 응답**

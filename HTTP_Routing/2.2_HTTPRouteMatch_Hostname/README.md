@@ -23,7 +23,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. Exact
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
@@ -34,7 +34,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; 
 ### 2. Wildcard 한 라벨
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: shop.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve shop.f5bnk.com:80:40.30.20.20 http://shop.f5bnk.com/
 ```
 
 **기대 응답**
@@ -44,7 +44,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: shop.f5bnk.com' http://40.30.20.20/; ec
 ### 3. Wildcard 여러 라벨
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: a.b.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve a.b.f5bnk.com:80:40.30.20.20 http://a.b.f5bnk.com/
 ```
 
 **기대 응답**
@@ -54,7 +54,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: a.b.f5bnk.com' http://40.30.20.20/; ech
 ### 4. apex는 wildcard 미매칭
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve f5bnk.com:80:40.30.20.20 http://f5bnk.com/
 ```
 
 **기대 응답**
@@ -63,7 +63,7 @@ curl -sS -D - -o /tmp/gw-body  -H 'Host: f5bnk.com' http://40.30.20.20/; echo; e
 ### 5. 다른 도메인
 
 ```bash
-curl -sS -D - -o /tmp/gw-body  -H 'Host: other.example.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl --resolve other.example.com:80:40.30.20.20 http://other.example.com/
 ```
 
 **기대 응답**

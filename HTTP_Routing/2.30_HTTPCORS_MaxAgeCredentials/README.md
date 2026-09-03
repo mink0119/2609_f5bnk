@@ -21,11 +21,7 @@ kubectl apply -f gw-http-route.yaml
 ### 1. credentials + maxAge
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X OPTIONS \
-  -H 'Host: coffee.f5bnk.com' \
-  -H 'Origin: https://shop.f5bnk.com' \
-  -H 'Access-Control-Request-Method: GET' \
-  http://40.30.20.20/; echo
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 -X OPTIONS -H 'Origin: https://shop.f5bnk.com' -H 'Access-Control-Request-Method: GET' http://coffee.f5bnk.com/
 ```
 
 **기대 응답**

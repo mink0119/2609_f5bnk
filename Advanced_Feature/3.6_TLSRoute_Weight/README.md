@@ -23,9 +23,9 @@ kubectl apply -f gw-tls-route.yaml
 
 ```bash
 for i in $(seq 1 20); do
-  curl -sk --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
+  curl -k --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
   echo
-done | sort | uniq -c
+done
 ```
 
 **기대 응답**

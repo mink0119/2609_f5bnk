@@ -27,8 +27,7 @@ kubectl apply -f gw-grpc-route.yaml
 
 ```bash
 # grpcurl 이 있을 때
-grpcurl -plaintext -authority grpc.f5bnk.com \
-  40.30.20.20:80 hello.HelloService/SayHello
+grpcurl -plaintext -authority grpc.f5bnk.com 40.30.20.20:80 hello.HelloService/SayHello
 ```
 
 **기대 응답**
@@ -38,7 +37,7 @@ grpcurl -plaintext -authority grpc.f5bnk.com \
 ### 2. HTTP로는 매칭 안 됨
 
 ```bash
-curl -sS -D - -H 'Host: grpc.f5bnk.com' http://40.30.20.20/ || true
+curl --resolve grpc.f5bnk.com:80:40.30.20.20 http://grpc.f5bnk.com/
 ```
 
 **기대 응답**

@@ -150,20 +150,20 @@ path는 `PathPrefix: /`만 써서 hostname만 가르게 했습니다.
 kubectl apply -f HTTP_Routing/2.2_HTTPRouteMatch_Hostname/gw-http-route.yaml
 
 # Exact — coffee
-curl -H 'Host: coffee.f5bnk.com' http://40.30.20.20/
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 # 기대: COFFEE SERVER - 30.0.0.10
 
 # Wildcard — tea
-curl -H 'Host: shop.f5bnk.com' http://40.30.20.20/
-curl -H 'Host: a.b.f5bnk.com' http://40.30.20.20/
+curl --resolve shop.f5bnk.com:80:40.30.20.20 http://shop.f5bnk.com/
+curl --resolve a.b.f5bnk.com:80:40.30.20.20 http://a.b.f5bnk.com/
 # 기대: TEA SERVER - 30.0.0.11
 
 # apex는 wildcard에 안 맞음
-curl -H 'Host: f5bnk.com' http://40.30.20.20/
+curl --resolve f5bnk.com:80:40.30.20.20 http://f5bnk.com/
 # 기대: 매칭 없음 (보통 404)
 
 # 다른 도메인
-curl -H 'Host: other.example.com' http://40.30.20.20/
+curl --resolve other.example.com:80:40.30.20.20 http://other.example.com/
 # 기대: 매칭 없음 (보통 404)
 
 # 다음 항목 전에 삭제

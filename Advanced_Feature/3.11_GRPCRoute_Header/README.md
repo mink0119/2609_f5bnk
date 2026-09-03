@@ -22,8 +22,7 @@ kubectl apply -f gw-grpc-route.yaml
 ### 1. 헤더 매칭
 
 ```bash
-grpcurl -plaintext -authority grpc.f5bnk.com \
-  -H 'env: canary' 40.30.20.20:80 hello.HelloService/SayHello
+grpcurl -plaintext -authority grpc.f5bnk.com -H 'env: canary' 40.30.20.20:80 hello.HelloService/SayHello
 ```
 
 **기대 응답**
