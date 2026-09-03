@@ -31,7 +31,7 @@ curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ### 2. 재시도 대상 코드
 
 ```bash
-echo '백엔드가 503을 주면 Gateway가 같은 pool에 재시도 후 최종 응답'
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/fail
 ```
 
 **기대 응답**

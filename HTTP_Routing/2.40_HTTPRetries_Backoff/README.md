@@ -31,7 +31,7 @@ curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ### 2. 재시도 간격
 
 ```bash
-echo '503 연속 시 재시도 사이 최소 100ms'
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/fail
 ```
 
 **기대 응답**

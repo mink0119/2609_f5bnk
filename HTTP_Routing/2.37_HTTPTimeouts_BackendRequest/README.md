@@ -31,7 +31,7 @@ curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ### 2. backendRequest 2s
 
 ```bash
-echo '백엔드가 2초 넘게 묵으면 backend timeout, 전체 request 한도는 10s'
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/slow
 ```
 
 **기대 응답**

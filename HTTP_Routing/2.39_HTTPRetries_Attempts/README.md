@@ -31,7 +31,7 @@ curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ### 2. attempts=3
 
 ```bash
-echo '백엔드가 계속 503이면 최대 3번 재시도 후 에러'
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/fail
 ```
 
 **기대 응답**

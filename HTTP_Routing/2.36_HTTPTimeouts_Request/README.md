@@ -28,10 +28,10 @@ curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 - HTTP/1.1 200
 - Body: `COFFEE SERVER - 30.0.0.10`
 
-### 2. 타임아웃 동작
+### 2. 타임아웃
 
 ```bash
-echo '백엔드가 5초 이상 지연되면 Gateway가 504/timeout 을 반환해야 함'
+curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/slow
 ```
 
 **기대 응답**
