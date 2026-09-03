@@ -1,0 +1,44 @@
+# 2.40 HTTP Retries — backoff
+
+## 구성
+
+```mermaid
+flowchart LR
+  C[Client] --> VIP[VIP]
+  VIP -->|backoff 100ms 후 retry| P1[coffee-pool]
+```
+
+## 적용
+
+```bash
+kubectl apply -f gw-http-route.yaml
+```
+
+명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.
+
+## 클라이언트 검증
+
+### 1. 정상
+
+```bash
+curl -sS -D - -o /tmp/gw-body  -H 'Host: coffee.f5bnk.com' http://40.30.20.20/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+```
+
+**기대 응답**
+- HTTP/1.1 200
+- Body: `COFFEE SERVER - 30.0.0.10`
+
+### 2. 재시도 간격
+
+```bash
+echo '503 연속 시 재시도 사이 최소 100ms'
+```
+
+**기대 응답**
+- 백엔드 로그 타임스탬프 간격 >= 100ms
+
+## 정리
+
+```bash
+kubectl delete -f gw-http-route.yaml
+```

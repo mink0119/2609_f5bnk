@@ -26,7 +26,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: coffee-route
+  name: session-cookie-route
   namespace: web
 spec:
   parentRefs:
@@ -36,52 +36,19 @@ spec:
   hostnames:
     - coffee.f5bnk.com
 
+
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /login
+    - sessionPersistence:
+        sessionName: BNKSESSION
+        type: Cookie
+        absoluteTimeout: 3600s
+        cookieConfig:
+          lifetimeType: Permanent
 
       backendRefs:
         - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
-
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: tea-route
-  namespace: web
-spec:
-  parentRefs:
-    - name: web-http-gw
-      sectionName: nginx
-
-  hostnames:
-    - tea.f5bnk.com
-
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-          headers:
-            - type: Exact
-              name: env
-              value: canary
-
-      backendRefs:
-        - name: httpbin-pool
-          kind: Pool
-          group: k8s.f5net.com
-
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-
-      backendRefs:
         - name: tea-pool
           kind: Pool
           group: k8s.f5net.com
@@ -106,15 +73,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.11"
-      port: 80
-
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: httpbin-pool
-  namespace: web
-spec:
-  members:
-    - address: "30.0.0.12"
       port: 80

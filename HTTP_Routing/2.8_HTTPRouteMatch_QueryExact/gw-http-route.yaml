@@ -26,7 +26,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: coffee-route
+  name: query-exact-route
   namespace: web
 spec:
   parentRefs:
@@ -34,39 +34,15 @@ spec:
       sectionName: bnk-listener
 
   hostnames:
-    - coffee.f5bnk.com
-
-  rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /login
-
-      backendRefs:
-        - name: coffee-pool
-          kind: Pool
-          group: k8s.f5net.com
-
----
-apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
-metadata:
-  name: tea-route
-  namespace: web
-spec:
-  parentRefs:
-    - name: web-http-gw
-      sectionName: nginx
-
-  hostnames:
     - tea.f5bnk.com
+
 
   rules:
     - matches:
         - path:
             type: PathPrefix
             value: /
-          headers:
+          queryParams:
             - type: Exact
               name: env
               value: canary
@@ -85,17 +61,6 @@ spec:
         - name: tea-pool
           kind: Pool
           group: k8s.f5net.com
-
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: coffee-pool
-  namespace: web
-spec:
-  members:
-    - address: "30.0.0.10"
-      port: 80
 
 ---
 apiVersion: k8s.f5net.com/v1

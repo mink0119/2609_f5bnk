@@ -23,10 +23,13 @@ spec:
           - kind: HTTPRoute
 
 ---
+# 2.2 Exact hostname
+# Host: coffee.f5bnk.com 만 coffee-pool 로 전달
+# Wildcard 와 겹치면 Exact 가 우선
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: coffee-route
+  name: hostname-exact-route
   namespace: web
 spec:
   parentRefs:
@@ -40,7 +43,7 @@ spec:
     - matches:
         - path:
             type: PathPrefix
-            value: /login
+            value: /
 
       backendRefs:
         - name: coffee-pool
@@ -48,34 +51,23 @@ spec:
           group: k8s.f5net.com
 
 ---
+# 2.2 Wildcard hostname
+# *.f5bnk.com → shop.f5bnk.com, a.b.f5bnk.com 매칭
+# apex f5bnk.com 은 매칭하지 않음 (GW API v1.6)
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
-  name: tea-route
+  name: hostname-wildcard-route
   namespace: web
 spec:
   parentRefs:
-    - name: web-http-gw
-      sectionName: nginx
+    - name: http-gw
+      sectionName: bnk-listener
 
   hostnames:
-    - tea.f5bnk.com
+    - "*.f5bnk.com"
 
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-          headers:
-            - type: Exact
-              name: env
-              value: canary
-
-      backendRefs:
-        - name: httpbin-pool
-          kind: Pool
-          group: k8s.f5net.com
-
     - matches:
         - path:
             type: PathPrefix
@@ -106,15 +98,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.11"
-      port: 80
-
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: httpbin-pool
-  namespace: web
-spec:
-  members:
-    - address: "30.0.0.12"
       port: 80
