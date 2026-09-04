@@ -1,12 +1,14 @@
 # 3.13 GRPCRoute — RequestMirror
 
+주 backend 응답만 client에 반환하고, 요청 복사본을 percent 비율로 mirror 합니다.
+
 ## 구성
 
 ```mermaid
 flowchart LR
   C[gRPC] --> GW[http-gw]
   GW --> P1[coffee-pool]
-  GW -.->|mirror| P3[httpbin-pool]
+  GW -.->|mirror 50%| P3[httpbin-pool]
   P1 -->|응답| C
 ```
 
@@ -20,15 +22,29 @@ kubectl apply -f gw-grpc-route.yaml
 
 ## 클라이언트 검증
 
-### 1. primary 응답
+### 1. primary 응답 유지
 
 ```bash
-grpcurl -plaintext -authority grpc.f5bnk.com 40.30.20.20:80 hello.HelloService/SayHello
+grpcurl -plaintext -authority grpc.f5bnk.com \
+  40.30.20.20:80 hello.HelloService/SayHello
 ```
 
 **기대 응답**
 - 클라이언트는 coffee-pool 응답만 봄
-- httpbin-pool 로그에도 미러 호출이 있어야 함
+- mirror 응답은 무시
+
+### 2. percent 비율
+
+```bash
+for i in $(seq 1 40); do
+  grpcurl -plaintext -authority grpc.f5bnk.com \
+    40.30.20.20:80 hello.HelloService/SayHello >/dev/null
+done
+```
+
+**기대 응답**
+- 40회 모두 클라이언트는 coffee 응답
+- httpbin-pool 수신은 약 50% (percent: 50)
 
 ## 정리
 

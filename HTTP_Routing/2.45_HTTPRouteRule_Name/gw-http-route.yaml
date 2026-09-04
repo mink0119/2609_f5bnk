@@ -20,13 +20,13 @@ spec:
           from: All
 
         kinds:
-          - kind: GRPCRoute
+          - kind: HTTPRoute
 
 ---
 apiVersion: gateway.networking.k8s.io/v1
-kind: GRPCRoute
+kind: HTTPRoute
 metadata:
-  name: grpc-header-route
+  name: httproute-rule-name
   namespace: web
 spec:
   parentRefs:
@@ -34,33 +34,28 @@ spec:
       sectionName: bnk-listener
 
   hostnames:
-    - grpc.f5bnk.com
+    - coffee.f5bnk.com
 
   rules:
-    - matches:
-        - headers:
-            - type: Exact
-              name: env
-              value: canary
+    - name: coffee-rule
+      matches:
+        - path:
+            type: PathPrefix
+            value: /coffee
 
       backendRefs:
-        - name: httpbin-pool
+        - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
 
-    - matches:
-        - headers:
-            - type: RegularExpression
-              name: env
-              value: canary-.*
+    - name: tea-rule
+      matches:
+        - path:
+            type: PathPrefix
+            value: /tea
 
       backendRefs:
         - name: tea-pool
-          kind: Pool
-          group: k8s.f5net.com
-
-    - backendRefs:
-        - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
 
@@ -84,15 +79,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.11"
-      port: 80
-
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: httpbin-pool
-  namespace: web
-spec:
-  members:
-    - address: "30.0.0.12"
       port: 80

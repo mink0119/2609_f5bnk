@@ -1,11 +1,12 @@
-# 3.11 GRPCRoute — header
+# 3.11 GRPCRoute — headers Exact / RegularExpression
 
 ## 구성
 
 ```mermaid
 flowchart LR
   C[gRPC] --> GW[http-gw]
-  GW -->|metadata env:canary| P3[httpbin-pool]
+  GW -->|env:canary Exact| P3[httpbin-pool]
+  GW -->|"env ~ canary-.* Regex"| P2[tea-pool]
   GW -->|그 외| P1[coffee-pool]
 ```
 
@@ -19,15 +20,36 @@ kubectl apply -f gw-grpc-route.yaml
 
 ## 클라이언트 검증
 
-### 1. 헤더 매칭
+### 1. Exact
 
 ```bash
-grpcurl -plaintext -authority grpc.f5bnk.com -H 'env: canary' 40.30.20.20:80 hello.HelloService/SayHello
+grpcurl -plaintext -authority grpc.f5bnk.com \
+  -H 'env: canary' 40.30.20.20:80 hello.HelloService/SayHello
 ```
 
 **기대 응답**
-- canary → httpbin-pool
-- 헤더 없으면 coffee-pool
+- httpbin-pool로 분기
+
+### 2. RegularExpression
+
+```bash
+grpcurl -plaintext -authority grpc.f5bnk.com \
+  -H 'env: canary-01' 40.30.20.20:80 hello.HelloService/SayHello
+```
+
+**기대 응답**
+- tea-pool로 분기
+- 구현체가 header regex 미지원이면 해당 rule Accepted=False / UnsupportedValue
+
+### 3. 헤더 없음
+
+```bash
+grpcurl -plaintext -authority grpc.f5bnk.com \
+  40.30.20.20:80 hello.HelloService/SayHello
+```
+
+**기대 응답**
+- coffee-pool
 
 ## 정리
 

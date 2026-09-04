@@ -20,13 +20,13 @@ spec:
           from: All
 
         kinds:
-          - kind: GRPCRoute
+          - kind: HTTPRoute
 
 ---
 apiVersion: gateway.networking.k8s.io/v1
-kind: GRPCRoute
+kind: HTTPRoute
 metadata:
-  name: grpc-mirror-route
+  name: backend-tls-target-route
   namespace: web
 spec:
   parentRefs:
@@ -34,22 +34,32 @@ spec:
       sectionName: bnk-listener
 
   hostnames:
-    - grpc.f5bnk.com
+    - coffee.f5bnk.com
+
 
   rules:
-    - filters:
-        - type: RequestMirror
-          requestMirror:
-            backendRef:
-              name: httpbin-pool
-              kind: Pool
-              group: k8s.f5net.com
-            percent: 50
-
-      backendRefs:
+    - backendRefs:
         - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
+
+---
+apiVersion: gateway.networking.k8s.io/v1alpha3
+kind: BackendTLSPolicy
+metadata:
+  name: coffee-backend-tls
+  namespace: web
+spec:
+  targetRefs:
+    - group: k8s.f5net.com
+      kind: Pool
+      name: coffee-pool
+  validation:
+    hostname: coffee.f5bnk.com
+    subjectAltNames:
+      - type: Hostname
+        hostname: coffee.f5bnk.com
+    wellKnownCACertificates: System
 
 ---
 apiVersion: k8s.f5net.com/v1
@@ -60,15 +70,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 80
-
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: httpbin-pool
-  namespace: web
-spec:
-  members:
-    - address: "30.0.0.12"
       port: 80
