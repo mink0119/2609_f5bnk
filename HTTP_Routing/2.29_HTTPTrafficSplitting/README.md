@@ -7,7 +7,6 @@ flowchart LR
   C[Client] --> VIP[VIP]
   VIP -->|/w90 90:10| P1[coffee] & P2[tea]
   VIP -->|/w11 1:1| P1
-  VIP -->|/w0 tea weight 0| P1
 ```
 
 ## 적용
@@ -44,18 +43,6 @@ done | sort | uniq -c
 
 **기대 응답**
 - coffee/tea 가 비슷한 비율
-
-### 3. weight=0
-
-```bash
-for i in $(seq 1 20); do
-  curl -sS --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/w0
-  echo
-done | sort | uniq -c
-```
-
-**기대 응답**
-- 전부 `COFFEE SERVER - 30.0.0.10` (tea weight=0 은 선택 안 됨)
 
 ## 정리
 

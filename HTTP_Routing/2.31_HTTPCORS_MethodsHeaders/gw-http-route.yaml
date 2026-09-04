@@ -23,6 +23,7 @@ spec:
           - kind: HTTPRoute
 
 ---
+# preflight 응답 Allow-Methods/Allow-Headers 는 이 목록. 목록 밖 method는 403으로 막지 않음.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -38,8 +39,7 @@ spec:
 
   rules:
     - filters:
-        - type: CORS
-          cors:
+        - cors:
             allowOrigins:
               - https://shop.f5bnk.com
             allowMethods:
@@ -48,7 +48,7 @@ spec:
             allowHeaders:
               - Content-Type
               - Authorization
-              - env
+          type: CORS
 
       backendRefs:
         - name: coffee-pool

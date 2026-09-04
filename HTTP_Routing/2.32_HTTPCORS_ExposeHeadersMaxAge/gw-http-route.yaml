@@ -23,6 +23,8 @@ spec:
           - kind: HTTPRoute
 
 ---
+# maxAge: 초 단위 int (기본 5). preflight 의 Access-Control-Max-Age.
+# exposeHeaders: 실제 CORS 응답에서 브라우저에 노출할 헤더. coffee 가 주는 X-Request-Id / X-Echo-Host.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
@@ -38,17 +40,16 @@ spec:
 
   rules:
     - filters:
-        - type: CORS
-          cors:
+        - cors:
             allowOrigins:
               - https://shop.f5bnk.com
             allowMethods:
               - GET
-              - OPTIONS
             exposeHeaders:
               - X-Request-Id
-              - X-PoC-Res-Add
+              - X-Echo-Host
             maxAge: 3600
+          type: CORS
 
       backendRefs:
         - name: coffee-pool

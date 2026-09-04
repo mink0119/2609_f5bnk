@@ -37,18 +37,51 @@ spec:
     - coffee.f5bnk.com
 
   rules:
-    - filters:
-        - type: CORS
-          cors:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /creds
+
+      filters:
+        - cors:
             allowOrigins:
               - https://shop.f5bnk.com
-            allowMethods:
-              - GET
-              - POST
-              - OPTIONS
-            allowHeaders:
-              - Authorization
             allowCredentials: true
+          type: CORS
+
+      backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /any
+
+      filters:
+        - cors:
+            allowOrigins:
+              - "*"
+            allowCredentials: false
+          type: CORS
+
+      backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /wild
+
+      filters:
+        - cors:
+            allowOrigins:
+              - https://*.f5bnk.com
+            allowCredentials: false
+          type: CORS
 
       backendRefs:
         - name: coffee-pool

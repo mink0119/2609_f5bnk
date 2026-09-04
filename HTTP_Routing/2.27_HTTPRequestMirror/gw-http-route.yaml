@@ -41,7 +41,7 @@ spec:
         - type: RequestMirror
           requestMirror:
             backendRef:
-              name: httpbin-pool
+              name: tea-pool
               kind: Pool
               group: k8s.f5net.com
 
@@ -65,9 +65,9 @@ spec:
 apiVersion: k8s.f5net.com/v1
 kind: Pool
 metadata:
-  name: httpbin-pool
+  name: tea-pool
   namespace: web
 spec:
   members:
-    - address: "30.0.0.12"
+    - address: "30.0.0.11"
       port: 80

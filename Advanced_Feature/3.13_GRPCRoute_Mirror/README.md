@@ -8,7 +8,7 @@
 flowchart LR
   C[gRPC] --> GW[http-gw]
   GW --> P1[coffee-pool]
-  GW -.->|mirror 50%| P3[httpbin-pool]
+  GW -.->|mirror 50%| P2[tea-pool]
   P1 -->|응답| C
 ```
 
@@ -30,8 +30,8 @@ grpcurl -plaintext -authority grpc.f5bnk.com \
 ```
 
 **기대 응답**
-- 클라이언트는 coffee-pool 응답만 봄
-- mirror 응답은 무시
+- 클라이언트는 coffee-pool 응답만 봄. tea 응답이 섞이면 BNK가 mirror 응답을 버린 게 아님
+- 백엔드 `192.168.48.254` `/var/log/nginx/poc-access.log` 에 tea 쪽 요청이 늘어야 mirror 전달
 
 ### 2. percent 비율
 
@@ -44,7 +44,7 @@ done
 
 **기대 응답**
 - 40회 모두 클라이언트는 coffee 응답
-- httpbin-pool 수신은 약 50% (percent: 50)
+- tea-pool 수신은 약 50% (percent: 50)
 
 ## 정리
 

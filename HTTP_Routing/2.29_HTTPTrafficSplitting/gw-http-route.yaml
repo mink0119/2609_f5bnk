@@ -67,21 +67,6 @@ spec:
           group: k8s.f5net.com
           weight: 1
 
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /w0
-
-      backendRefs:
-        - name: coffee-pool
-          kind: Pool
-          group: k8s.f5net.com
-          weight: 1
-        - name: tea-pool
-          kind: Pool
-          group: k8s.f5net.com
-          weight: 0
-
 ---
 apiVersion: k8s.f5net.com/v1
 kind: Pool

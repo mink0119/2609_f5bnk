@@ -1,13 +1,15 @@
 # 2.28 HTTP Request Mirror — percent / fraction
 
-## 구성
+BNK가 일부 요청만 tea로 복사한다. client 응답은 항상 coffee이고, tea 응답은 BNK가 버린다.
 
 ```mermaid
 flowchart LR
   C[Client] --> VIP[VIP]
-  VIP -->|/percent 50%| M[httpbin-pool]
+  VIP -->|/percent 50%| M[tea-pool]
   VIP -->|/fraction 1/2| M
   VIP -->|항상| P1[coffee-pool]
+  P1 -->|응답| C
+  M -.->|BNK가 버림| X[client에 안 감]
 ```
 
 ## 적용
@@ -16,34 +18,45 @@ flowchart LR
 kubectl apply -f gw-http-route.yaml
 ```
 
-명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.
+명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.  
+tea 로그는 백엔드 호스트 `192.168.48.254` 의 `/var/log/nginx/poc-access.log` 입니다.
 
 ## 클라이언트 검증
 
+비율 확인 전에, 2.27과 같이 **client는 coffee만** / **tea는 로그만** 을 먼저 본다.
+
 ### 1. percent 50
+
+백엔드에서 로그 줄 수를 적어 둔다.
+
+```bash
+# 192.168.48.254
+wc -l /var/log/nginx/poc-access.log
+```
 
 ```bash
 for i in $(seq 1 40); do
-  curl -sS --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/percent >/dev/null
-done
-echo '클라이언트 40회는 모두 coffee 응답. mirror 수신은 httpbin 로그에서 약 50% 확인'
+  curl -sS -o /tmp/gw-body --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/percent
+  cat /tmp/gw-body
+done | grep -c 'COFFEE SERVER'
 ```
 
-**기대 응답**
-- 클라이언트 body는 항상 `COFFEE SERVER - 30.0.0.10`
-- httpbin 수신 횟수 ≈ 20회 (허용 오차)
+**기대**
+- 40회 모두 body가 `COFFEE SERVER - 30.0.0.10` (`TEA SERVER` 0회)
+- 백엔드 로그 증가량 ≈ 40(coffee) + 20(tea) = 약 60줄. tea 쪽이 전혀 안 늘면 mirror 미전달
+- tea 응답이 client에 섞이면 실패
 
 ### 2. fraction 1/2
 
 ```bash
 for i in $(seq 1 40); do
-  curl -sS --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/fraction >/dev/null
+  curl -sS --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/fraction
 done
 ```
 
-**기대 응답**
-- 클라이언트는 항상 coffee
-- mirror 비율 약 1/2
+**기대**
+- client는 항상 coffee. `TEA SERVER` 없음
+- tea 로그 수신 비율 약 1/2
 - percent와 fraction을 같이 쓰면 fraction이 우선
 
 ## 정리
