@@ -1,11 +1,13 @@
 # 3.12 GRPCRoute — request/response modifier
 
+gRPC 요청·응답 metadata header 를 추가합니다.
+
 ## 구성
 
 ```mermaid
 flowchart LR
   C[gRPC] --> GW[http-gw]
-  GW -->|add X-PoC-Add| P1[coffee-pool]
+  GW -->|add X-PoC-Add| P1[coffee-pool :50051]
   P1 -->|add X-PoC-Res-Add| C
 ```
 
@@ -26,8 +28,8 @@ grpcurl -plaintext -authority grpc.f5bnk.com -v 40.30.20.20:80 hello.HelloServic
 ```
 
 **기대 응답**
-- 백엔드가 `X-PoC-Add: added` 수신
-- 클라이언트 응답 트레일러/헤더에 `X-PoC-Res-Add: added`
+- 백엔드가 `X-PoC-Add: added` 수신 (서버 reply 또는 로그)
+- 클라이언트 응답 헤더/트레일러에 `X-PoC-Res-Add: added`
 
 ## 정리
 

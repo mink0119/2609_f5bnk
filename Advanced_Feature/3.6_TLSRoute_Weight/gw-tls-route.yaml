@@ -14,7 +14,6 @@ spec:
     - name: bnk-listener
       protocol: TLS
       port: 443
-      hostname: coffee.f5bnk.com
 
       tls:
         mode: Passthrough
@@ -27,7 +26,7 @@ spec:
           - kind: TLSRoute
 
 ---
-apiVersion: gateway.networking.k8s.io/v1alpha2
+apiVersion: gateway.networking.k8s.io/v1
 kind: TLSRoute
 metadata:
   name: tls-weight-route
@@ -60,7 +59,7 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 80
+      port: 443
 
 ---
 apiVersion: k8s.f5net.com/v1
@@ -71,4 +70,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.11"
-      port: 80
+      port: 443

@@ -1,6 +1,7 @@
 # 3.16 TCPRoute — listener / parentRef
 
-두 TCP listener/Route로 port별 backend를 나눕니다.
+두 TCP listener/Route로 port별 backend를 나눕니다.  
+backend 는 기존 HTTP :80 으로도 L4 전달을 확인할 수 있습니다.
 
 ## 구성
 
@@ -8,8 +9,8 @@
 flowchart LR
   C80["TCP :80"] --> GW[tcp-gw]
   C8080["TCP :8080"] --> GW
-  GW -->|bnk-listener :80| P1["coffee-pool 30.0.0.10"]
-  GW -->|bnk-listener-8080 :8080| P2["tea-pool 30.0.0.11"]
+  GW -->|bnk-listener :80| P1["coffee-pool 30.0.0.10:80"]
+  GW -->|bnk-listener-8080 :8080| P2["tea-pool 30.0.0.11:80"]
 ```
 
 ## 적용
@@ -30,7 +31,7 @@ echo -e 'GET / HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n' | nc -w 3 40.30
 
 **기대 응답**
 - TCP 연결 성공
-- Body `COFFEE SERVER - 30.0.0.10` (또는 coffee 서버의 / 응답)
+- Body `COFFEE SERVER - 30.0.0.10`
 - Host/path 매칭 없음 (L4)
 
 ### 2. port 8080 → tea
@@ -52,4 +53,5 @@ kubectl delete -f gw-tcp-route.yaml
 
 ## 참고
 
-TCPRoute는 L4입니다. hostname/path 매칭이 없습니다.
+TCPRoute는 L4입니다. hostname/path 매칭이 없습니다.  
+BNK 2.3 지원 kind 는 L4Route (`gateway.k8s.f5net.com`) 이지 TCPRoute 가 아닙니다. TCPRoute apply 후 Listener `InvalidRouteKinds` 이면 문서와 일치.

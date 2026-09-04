@@ -36,7 +36,6 @@ spec:
   hostnames:
     - coffee.f5bnk.com
 
-
   rules:
     - backendRefs:
         - name: coffee-pool
@@ -44,7 +43,7 @@ spec:
           group: k8s.f5net.com
 
 ---
-apiVersion: gateway.networking.k8s.io/v1alpha3
+apiVersion: gateway.networking.k8s.io/v1
 kind: BackendTLSPolicy
 metadata:
   name: coffee-backend-tls-system
@@ -67,4 +66,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 80
+      port: 443

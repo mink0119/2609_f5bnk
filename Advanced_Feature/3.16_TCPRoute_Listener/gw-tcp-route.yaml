@@ -34,7 +34,7 @@ spec:
           - kind: TCPRoute
 
 ---
-apiVersion: gateway.networking.k8s.io/v1alpha2
+apiVersion: gateway.networking.k8s.io/v1
 kind: TCPRoute
 metadata:
   name: tcp-listener-80
@@ -51,7 +51,7 @@ spec:
           group: k8s.f5net.com
 
 ---
-apiVersion: gateway.networking.k8s.io/v1alpha2
+apiVersion: gateway.networking.k8s.io/v1
 kind: TCPRoute
 metadata:
   name: tcp-listener-8080

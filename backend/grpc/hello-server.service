@@ -1,0 +1,14 @@
+[Unit]
+Description=PoC gRPC HelloService (%i)
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/poc-grpc-%i
+Environment=PYTHONPATH=/opt/poc/pydeps
+WorkingDirectory=/opt/poc/grpc
+ExecStart=/usr/bin/python3 /opt/poc/grpc/hello_server.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

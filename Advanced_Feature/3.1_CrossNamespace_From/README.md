@@ -1,12 +1,15 @@
 # 3.1 Cross-namespace — Gateway from Selector
 
+다른 namespace Route가 Gateway `allowedRoutes.from: Selector` 로 허용될 때 parentRef 연결을 확인합니다.  
+backend Pool은 Route와 같은 `web-route` 에 둡니다 (3.2 ReferenceGrant와 분리).
+
 ## 구성
 
 ```mermaid
 flowchart LR
   C[Client] --> GW["Gateway ns=web<br/>allowedRoutes from Selector"]
   GW --> R["HTTPRoute ns=web-route<br/>label poc-route-ns=true"]
-  R --> P1["Pool ns=web 30.0.0.10"]
+  R --> P1["Pool ns=web-route 30.0.0.10"]
 ```
 
 ## 사전 준비
@@ -37,7 +40,7 @@ curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ### 2. Selector 확인
 
 ```bash
-kubectl get ns web-route --show-labels; kubectl get gateway http-gw -n web -o yaml | grep -A6 allowedRoutes
+kubectl get ns web-route --show-labels; kubectl get gateway http-gw -n web -o yaml | grep -A8 allowedRoutes
 ```
 
 **기대 응답**
@@ -49,3 +52,8 @@ kubectl get ns web-route --show-labels; kubectl get gateway http-gw -n web -o ya
 ```bash
 kubectl delete -f gw-http-route.yaml
 ```
+
+## 참고
+
+BNK 2.3 Gateway 문서: `allowedRoutes.namespaces.from` 은 All/Same 만 지원, Selector 는 미지원.  
+Selector가 거절되면 Listener `InvalidRouteKinds` / Route Accepted=False 가 정상이다.

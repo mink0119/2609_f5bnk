@@ -1,18 +1,12 @@
-# 3.8 BackendTLSPolicy — caCertificates
+# 3.8 BackendTLSPolicy — caCertificateRefs
+
+ConfigMap `backend-ca` (`ca.crt`) 로 upstream 서버 인증서를 검증합니다. ConfigMap 은 YAML에 포함되어 있습니다.
 
 ## 구성
 
 ```mermaid
 flowchart LR
-  VIP[http-gw] -->|검증 CA = ConfigMap backend-ca| P1[coffee-pool]
-```
-
-## 사전 준비
-
-`web` 에 ConfigMap `backend-ca` (`ca.crt` 키)가 필요합니다.
-
-```bash
-kubectl create configmap backend-ca -n web --from-file=ca.crt=./ca.crt
+  VIP[http-gw] -->|검증 CA = ConfigMap backend-ca| P1[coffee-pool :443]
 ```
 
 ## 적용
@@ -25,15 +19,15 @@ kubectl apply -f gw-backend-tls.yaml
 
 ## 클라이언트 검증
 
-### 1. 커스텀 CA
+### 1. 지정 CA 로 검증
 
 ```bash
 curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```
 
 **기대 응답**
-- ConfigMap `backend-ca` 의 ca.crt 로 백엔드 인증서 검증
-- 검증 성공 시 200 + coffee, 실패 시 502/503
+- ConfigMap `backend-ca` 의 ca.crt 가 coffee 인증서를 검증하면 200 + `COFFEE TLS - 30.0.0.10`
+- 잘못된 CA 로 바꾸면 502/503
 
 ### 2. 리소스
 
@@ -49,3 +43,8 @@ kubectl get configmap backend-ca -n web; kubectl get backendtlspolicy -n web
 ```bash
 kubectl delete -f gw-backend-tls.yaml
 ```
+
+## 참고
+
+`caCertificateRefs` 와 `wellKnownCACertificates` 는 동시에 쓸 수 없다 (CRD CEL).  
+BNK 2.3: BackendTLSPolicy is not supported.

@@ -53,14 +53,13 @@ spec:
         - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
-          namespace: web
 
 ---
 apiVersion: k8s.f5net.com/v1
 kind: Pool
 metadata:
   name: coffee-pool
-  namespace: web
+  namespace: web-route
 spec:
   members:
     - address: "30.0.0.10"

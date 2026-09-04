@@ -48,9 +48,7 @@ Listener는 이름만 고정하고 protocol/port/kinds 는 항목에 맞게 바�
 
 | 리소스 | apiVersion |
 |---|---|
-| Gateway, HTTPRoute, GRPCRoute | `gateway.networking.k8s.io/v1` |
-| TLSRoute, TCPRoute, UDPRoute | `gateway.networking.k8s.io/v1alpha2` |
-| BackendTLSPolicy | `gateway.networking.k8s.io/v1alpha3` |
+| Gateway, HTTPRoute, GRPCRoute, TLSRoute, TCPRoute, UDPRoute, BackendTLSPolicy | `gateway.networking.k8s.io/v1` |
 | ReferenceGrant | `gateway.networking.k8s.io/v1beta1` |
 | Pool | `k8s.f5net.com/v1` |
 

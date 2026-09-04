@@ -63,4 +63,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 80
+      port: 50051

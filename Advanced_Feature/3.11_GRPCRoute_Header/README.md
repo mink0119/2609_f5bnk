@@ -1,13 +1,15 @@
 # 3.11 GRPCRoute — headers Exact / RegularExpression
 
+gRPC metadata header 로 backend 를 나눕니다.
+
 ## 구성
 
 ```mermaid
 flowchart LR
   C[gRPC] --> GW[http-gw]
-  GW -->|env:canary Exact| P3[httpbin-pool]
-  GW -->|"env ~ canary-.* Regex"| P2[tea-pool]
-  GW -->|그 외| P1[coffee-pool]
+  GW -->|env:canary Exact| P3[httpbin-pool :50051]
+  GW -->|"env ~ canary-.* Regex"| P2[tea-pool :50051]
+  GW -->|그 외| P1[coffee-pool :50051]
 ```
 
 ## 적용
@@ -28,7 +30,7 @@ grpcurl -plaintext -authority grpc.f5bnk.com \
 ```
 
 **기대 응답**
-- httpbin-pool로 분기
+- httpbin-pool (`CANARY GRPC - 30.0.0.12`)
 
 ### 2. RegularExpression
 
@@ -38,7 +40,7 @@ grpcurl -plaintext -authority grpc.f5bnk.com \
 ```
 
 **기대 응답**
-- tea-pool로 분기
+- tea-pool (`TEA GRPC - 30.0.0.11`)
 - 구현체가 header regex 미지원이면 해당 rule Accepted=False / UnsupportedValue
 
 ### 3. 헤더 없음
@@ -49,7 +51,7 @@ grpcurl -plaintext -authority grpc.f5bnk.com \
 ```
 
 **기대 응답**
-- coffee-pool
+- coffee-pool (`COFFEE GRPC - 30.0.0.10`)
 
 ## 정리
 

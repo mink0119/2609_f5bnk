@@ -1,12 +1,15 @@
 # 3.10 GRPCRoute — method
 
+gRPC service/method 이름으로 분기합니다.  
+Gateway listener 는 HTTP :80 (h2c). backend Pool 은 `30.0.0.10:50051` (`backend/grpc`).
+
 ## 구성
 
 ```mermaid
 flowchart LR
-  C["gRPC hello.HelloService/SayHello"] --> GW[http-gw]
+  C["gRPC hello.HelloService/SayHello"] --> GW[http-gw :80]
   GW --> R[GRPCRoute method match]
-  R --> P1[coffee-pool]
+  R --> P1[coffee-pool :50051]
 ```
 
 ## 사전 준비
@@ -26,12 +29,11 @@ kubectl apply -f gw-grpc-route.yaml
 ### 1. 매칭 method
 
 ```bash
-# grpcurl 이 있을 때
 grpcurl -plaintext -authority grpc.f5bnk.com 40.30.20.20:80 hello.HelloService/SayHello
 ```
 
 **기대 응답**
-- SayHello 가 coffee-pool로 전달
+- SayHello 가 coffee-pool로 전달 (`COFFEE GRPC - 30.0.0.10`)
 - 다른 service/method 는 매칭 없음 (UNIMPLEMENTED/404)
 
 ### 2. HTTP로는 매칭 안 됨

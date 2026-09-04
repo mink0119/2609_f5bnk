@@ -29,8 +29,11 @@ done
 ```
 
 **기대 응답**
-- coffee로 간 요청만 백엔드에 `X-Backend: coffee`
+- coffee로 간 요청만 백엔드에 `X-Backend: coffee` (`X-Echo-X-Backend: coffee`)
 - tea로 간 요청에는 해당 헤더 없음
+
+Native `backendRef.filters` 는 Accepted 이지만 지정 backend에만 헤더가 안 붙는다.  
+카탈로그 2.9 경로분기 header iRule만 사용 (`/coffee` → `X-Backend: coffee`). per-backendRef 는 불가.
 
 ## 정리
 

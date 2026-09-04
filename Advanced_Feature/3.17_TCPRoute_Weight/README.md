@@ -1,5 +1,7 @@
 # 3.17 TCPRoute — weight
 
+복수 TCP backendRef 로 연결을 비율 분산합니다.
+
 ## 구성
 
 ```mermaid
@@ -36,3 +38,7 @@ done | grep -E 'COFFEE|TEA|SERVER' | sort | uniq -c
 ```bash
 kubectl delete -f gw-tcp-route.yaml
 ```
+
+## 참고
+
+BNK 2.3: TCP/UDP 는 L4Route. TCPRoute weight 는 live 에서 kind 수락 여부를 먼저 본다.

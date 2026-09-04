@@ -1,0 +1,12 @@
+[Unit]
+Description=PoC UDP echo (%i)
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/default/poc-udp-%i
+ExecStart=/usr/bin/python3 /opt/poc/udp/echo.py
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

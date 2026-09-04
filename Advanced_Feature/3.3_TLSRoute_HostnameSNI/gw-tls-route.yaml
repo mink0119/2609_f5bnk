@@ -14,7 +14,6 @@ spec:
     - name: bnk-listener
       protocol: TLS
       port: 443
-      hostname: coffee.f5bnk.com
 
       tls:
         mode: Passthrough
@@ -27,10 +26,10 @@ spec:
           - kind: TLSRoute
 
 ---
-apiVersion: gateway.networking.k8s.io/v1alpha2
+apiVersion: gateway.networking.k8s.io/v1
 kind: TLSRoute
 metadata:
-  name: tls-sni-route
+  name: tls-sni-coffee
   namespace: web
 spec:
   parentRefs:
@@ -47,6 +46,26 @@ spec:
           group: k8s.f5net.com
 
 ---
+apiVersion: gateway.networking.k8s.io/v1
+kind: TLSRoute
+metadata:
+  name: tls-sni-tea
+  namespace: web
+spec:
+  parentRefs:
+    - name: tls-gw
+      sectionName: bnk-listener
+
+  hostnames:
+    - tea.f5bnk.com
+
+  rules:
+    - backendRefs:
+        - name: tea-pool
+          kind: Pool
+          group: k8s.f5net.com
+
+---
 apiVersion: k8s.f5net.com/v1
 kind: Pool
 metadata:
@@ -55,4 +74,15 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 80
+      port: 443
+
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
+      port: 443

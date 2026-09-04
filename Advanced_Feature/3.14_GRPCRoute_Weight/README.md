@@ -1,12 +1,14 @@
 # 3.14 GRPCRoute — weight
 
+복수 gRPC backendRef 의 상대 weight 로 RPC 를 나눕니다.
+
 ## 구성
 
 ```mermaid
 flowchart LR
   C[gRPC] --> GW[http-gw]
-  GW -->|70| P1[coffee-pool]
-  GW -->|30| P2[tea-pool]
+  GW -->|70| P1[coffee-pool :50051]
+  GW -->|30| P2[tea-pool :50051]
 ```
 
 ## 적용
@@ -35,3 +37,7 @@ done
 ```bash
 kubectl delete -f gw-grpc-route.yaml
 ```
+
+## 참고
+
+BNK 2.3: GRPCRoute 는 listener 당 하나의 backendRef 를 권장. weight 미지원이면 Accepted=False 또는 한쪽만 사용.
