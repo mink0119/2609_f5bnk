@@ -6,7 +6,7 @@
 flowchart LR
   C["POST /submit"] --> VIP[VIP]
   VIP --> R["303 Location: /login"]
-  C -->|"따라가면 GET /login"| X[클라이언트 GET]
+  C -->|"따라가면 GET /login"| P["coffee-pool 30.0.0.10"]
 ```
 
 ## 적용
@@ -30,15 +30,32 @@ curl -sS -D - -o /tmp/gw-body --max-redirs 0 -X POST --data 'a=1' --resolve coff
 - Location path 가 `/login`
 - 303은 POST-Redirect-GET. 클라이언트가 Location을 GET으로 호출해야 함
 
-### 2. 자동 추종 시 GET으로 바뀜
+### 2. 자동 추종 시 GET /login 으로 바뀜
+
+`-D` 는 응답 헤더만 보여서 추종 후 method/URI 가 안 보입니다. `-v -L` 로 두 번째 요청 라인을 확인합니다.
 
 ```bash
-curl -sS -D - -o /tmp/gw-body -X POST --data 'a=1' -L --max-redirs 1 --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/submit; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl -sS -v -L --max-redirs 1 \
+  --data 'a=1' \
+  --resolve coffee.f5bnk.com:80:40.30.20.20 \
+  -o /dev/null \
+  http://coffee.f5bnk.com/submit
 ```
 
-**기대 응답**
-- 첫 응답 303 후 다음 요청 method는 GET
-- 이 YAML에는 /login GET rule이 없어 follow 후 404일 수 있음. 검증 포인트는 303 + Location + 추종 method=GET
+**기대 (stderr)**
+
+```
+> POST /submit HTTP/1.1
+} [3 bytes data]
+< HTTP/1.0 303 See Other
+< Location: http://coffee.f5bnk.com/login
+* Switch to GET
+> GET /login HTTP/1.0
+< HTTP/1.0 200
+```
+
+- 두 번째 요청이 `GET /login` 으로 바뀜 (`* Switch to GET`)
+- 두 번째 요청에는 `} [3 bytes data]` 가 없음 (body 미전달)
 
 ## 정리
 
