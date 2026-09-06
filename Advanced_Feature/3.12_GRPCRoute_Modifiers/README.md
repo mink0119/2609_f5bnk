@@ -36,3 +36,7 @@ grpcurl -plaintext -authority grpc.f5bnk.com -v 40.30.20.20:80 hello.HelloServic
 ```bash
 kubectl delete -f gw-grpc-route.yaml
 ```
+
+## live 결과
+
+Accepted=True. 백엔드 md에 `X-PoC-Add` 없음. 응답/trailer에 `X-PoC-Res-Add` 없음. gRPC iRule 없음.

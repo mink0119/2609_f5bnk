@@ -43,3 +43,7 @@ echo '백엔드가 5초 넘기면 Gateway timeout (보통 504). 0s는 timeout �
 ```bash
 kubectl delete -f gw-http-route.yaml
 ```
+
+## live 결과
+
+Accepted=True. `/delay/8` → 200 in 8.01s (`request: 5s` 미적용). timeout iRule 없음.

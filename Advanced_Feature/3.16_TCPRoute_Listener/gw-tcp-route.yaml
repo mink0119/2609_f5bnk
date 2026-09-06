@@ -1,3 +1,4 @@
+# Gateway API TCPRoute kind 미지원. BNK native: protocol TCP + L4Route
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -18,9 +19,9 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-
         kinds:
-          - kind: TCPRoute
+          - kind: L4Route
+            group: gateway.k8s.f5net.com
 
     - name: bnk-listener-8080
       protocol: TCP
@@ -29,17 +30,18 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-
         kinds:
-          - kind: TCPRoute
+          - kind: L4Route
+            group: gateway.k8s.f5net.com
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: TCPRoute
+apiVersion: gateway.k8s.f5net.com/v1
+kind: L4Route
 metadata:
   name: tcp-listener-80
   namespace: web
 spec:
+  protocol: TCP
   parentRefs:
     - name: tcp-gw
       sectionName: bnk-listener
@@ -51,12 +53,13 @@ spec:
           group: k8s.f5net.com
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: TCPRoute
+apiVersion: gateway.k8s.f5net.com/v1
+kind: L4Route
 metadata:
   name: tcp-listener-8080
   namespace: web
 spec:
+  protocol: TCP
   parentRefs:
     - name: tcp-gw
       sectionName: bnk-listener-8080

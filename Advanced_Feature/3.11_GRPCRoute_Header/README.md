@@ -58,3 +58,7 @@ grpcurl -plaintext -authority grpc.f5bnk.com \
 ```bash
 kubectl delete -f gw-grpc-route.yaml
 ```
+
+## live 결과
+
+Accepted=True. grpcurl `-H env:` 메타데이터는 백엔드 로그에 도달했으나 모든 RPC가 첫 rule(canary). gRPC header iRule 없음.

@@ -1,3 +1,5 @@
+# Gateway API UDPRoute kind 미지원. BNK native: protocol UDP + L4Route
+# 백엔드 echo 는 :9053 (호스트 named 가 :53 점유)
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -18,17 +20,18 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-
         kinds:
-          - kind: UDPRoute
+          - kind: L4Route
+            group: gateway.k8s.f5net.com
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: UDPRoute
+apiVersion: gateway.k8s.f5net.com/v1
+kind: L4Route
 metadata:
   name: udp-listener-route
   namespace: web
 spec:
+  protocol: UDP
   parentRefs:
     - name: udp-gw
       sectionName: bnk-listener

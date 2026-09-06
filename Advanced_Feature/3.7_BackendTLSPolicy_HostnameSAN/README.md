@@ -1,17 +1,14 @@
 # 3.7 BackendTLSPolicy — hostname / subjectAltNames
 
-upstream TLS SNI(`hostname`)와 서버 인증서 SAN(`subjectAltNames`)을 검증합니다.  
-CA 는 3.8과 같은 ConfigMap `backend-ca` 를 써서 hostname/SAN 만 변수로 둡니다 (System CA 는 3.9).
-
-Pool member 는 TLS :443.
+HTTPS Terminate + BackendTLSPolicy (재암호화) 와 HTTP listener + policy 둘 다 재검증.  
+Pool member 는 TLS :443. CA 는 ConfigMap `backend-ca`.
 
 ## 구성
 
 ```mermaid
 flowchart LR
-  C[Client HTTP] --> VIP[http-gw]
-  VIP -->|coffee.f5bnk.com SAN 일치| P1["coffee-pool TLS"]
-  VIP -->|mismatch.f5bnk.com SAN 불일치| P2["tea-pool TLS"]
+  C[Client HTTPS] --> VIP[http-gw Terminate]
+  VIP -->|policy면 upstream TLS| P1["coffee-pool :443"]
 ```
 
 ## 적용
@@ -20,36 +17,16 @@ flowchart LR
 kubectl apply -f gw-backend-tls.yaml
 ```
 
-명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.
+## live 결과
 
-## 클라이언트 검증
-
-### 1. hostname/SAN 일치
-
-```bash
-curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
-```
-
-**기대 응답**
-- 200 + `COFFEE TLS - 30.0.0.10`
-- policy `coffee-backend-tls-match` hostname/SAN = `coffee.f5bnk.com`
-
-### 2. hostname/SAN 불일치 fail-close
-
-```bash
-curl --resolve mismatch.f5bnk.com:80:40.30.20.20 http://mismatch.f5bnk.com/
-```
-
-**기대 응답**
-- tea 인증서 SAN 은 `tea.f5bnk.com` 인데 policy 는 `coffee.f5bnk.com` → fail-close (502/503)
-- `kubectl get backendtlspolicy tea-backend-tls-mismatch -n web -o yaml` status 오류
+- CRD `backendtlspolicies.gateway.networking.k8s.io` 존재
+- policy `status=` 비어 있음. events 없음. f5-cne-controller 로그에 BackendTLS 없음
+- Gateway는 pool :443 에 **plain HTTP** → nginx `400 The plain HTTP request was sent to HTTPS port`
+- SAN match/mismatch를 검증할 수 없음 (upstream TLS 자체가 없음)
+- iRule 카탈로그에 BackendTLSPolicy 없음
 
 ## 정리
 
 ```bash
 kubectl delete -f gw-backend-tls.yaml
 ```
-
-## 참고
-
-BNK 2.3 Gateway 문서: BackendTLSPolicy is not supported. 컨트롤러가 이벤트를 처리하지 않으면 policy status 가 비어 있는 것이 문서와 맞다.

@@ -53,3 +53,7 @@ done
 ```bash
 kubectl delete -f gw-grpc-route.yaml
 ```
+
+## live 결과
+
+Accepted=True. 10 RPC client는 모두 coffee. tea:50051 미러 0. gRPC mirror iRule 없음.

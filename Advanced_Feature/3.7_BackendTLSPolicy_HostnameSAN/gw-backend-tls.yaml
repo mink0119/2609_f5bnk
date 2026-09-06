@@ -1,3 +1,5 @@
+# HTTPS Terminate + BackendTLSPolicy (재암호화). Pool :443.
+# CRD는 있으나 BNK 컨트롤러가 처리하지 않으면 status 비어 있고 upstream은 plain HTTP.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -5,23 +7,80 @@ metadata:
   namespace: web
 spec:
   gatewayClassName: f5-bnk-gateway-class
-
   addresses:
-    - type: IPAddress
-      value: 40.30.20.20
-
+  - type: IPAddress
+    value: 40.30.20.20
   listeners:
-    - name: bnk-listener
-      protocol: HTTP
-      port: 80
-
-      allowedRoutes:
-        namespaces:
-          from: All
-
-        kinds:
-          - kind: HTTPRoute
-
+  - name: bnk-listener
+    protocol: HTTPS
+    port: 443
+    allowedRoutes:
+      namespaces:
+        from: All
+      kinds:
+      - kind: HTTPRoute
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - name: web-tls-cert
+        kind: Secret
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: web-tls-cert
+  namespace: web
+type: kubernetes.io/tls
+stringData:
+  tls.crt: |
+    -----BEGIN CERTIFICATE-----
+    MIIDITCCAgmgAwIBAgIUXFbe9BlIIylE+XrVwG1zNdPumQkwDQYJKoZIhvcNAQEL
+    BQAwGTEXMBUGA1UEAwwOcG9jLWJhY2tlbmQtY2EwHhcNMjYwOTA0MTE1MDUyWhcN
+    MzYwOTAxMTE1MDUyWjAbMRkwFwYDVQQDDBBjb2ZmZWUuZjVibmsuY29tMIIBIjAN
+    BgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAmYX7nrlPRZOWFagwIixmUxAPtF0c
+    wTMGQGtptycg7ZRfY7Bk/tRabUeboErJjZxjGniDFeuf6pPM23S+CjgIIqywFiWa
+    3Ph00j9oOkzWYslByyVuZFyZwijUEvvoitAf16n6kizu9qzTXHeGYkxBq/eChWoc
+    1sNHuCnlqRjDJX9VQpAgIngYOwgS+op4SpLgm86QdzupflrpEP9BS7npH/u6MbUs
+    rs7YdlCpsFHwx5C5w90gmTnkcK0KGszbBXFjDolQeQugdYmegP7BH4RUdwPL3mjK
+    muaU+AKSSojJnTl50rQiwJQlYNCPiGLbwLhOKBWGG4bRWk6rOatrqXhIywIDAQAB
+    o18wXTAbBgNVHREEFDASghBjb2ZmZWUuZjVibmsuY29tMB0GA1UdDgQWBBSn6x0V
+    qutjjMmeAnnC6UvZplda8TAfBgNVHSMEGDAWgBQb3dQIGFFwD5yAoUYOmo5DHQFu
+    ezANBgkqhkiG9w0BAQsFAAOCAQEAIrFoGumqok7GMkJ6KZH5hUbcqKs/h8KYs+yb
+    iYX3+2qTxkhpnA3AhRD4jxj7mWhSW0vny69wTX/+xvTDPZSWkBra5jo4ZmF8YPGc
+    BPp/+49vB9HtBfWv1ro23smcvD9hpW4j3V+tqirMhsOKEp2PrzoUawktSWbKuVAU
+    6JwE6b1iVjfCsn24AKaFFgP6N72/BAkpM8+wCei3zsu7cd/xEECsswdxmbFSIcsO
+    +MBOEYFFzI0mStkZrHPoHzPiBIArwvj0rdo3C43EozvTBmPrlTDAnayVFvQlr2C6
+    rYUEsygIrbR4+xdmykjapX/NmbN5Ageq63yWfKi6TQJ6UOVa1w==
+    -----END CERTIFICATE-----
+  tls.key: |
+    -----BEGIN PRIVATE KEY-----
+    MIIEvAIBADANBgkqhkiG9w0BAQEFAASCBKYwggSiAgEAAoIBAQCZhfueuU9Fk5YV
+    qDAiLGZTEA+0XRzBMwZAa2m3JyDtlF9jsGT+1FptR5ugSsmNnGMaeIMV65/qk8zb
+    dL4KOAgirLAWJZrc+HTSP2g6TNZiyUHLJW5kXJnCKNQS++iK0B/XqfqSLO72rNNc
+    d4ZiTEGr94KFahzWw0e4KeWpGMMlf1VCkCAieBg7CBL6inhKkuCbzpB3O6l+WukQ
+    /0FLuekf+7oxtSyuzth2UKmwUfDHkLnD3SCZOeRwrQoazNsFcWMOiVB5C6B1iZ6A
+    /sEfhFR3A8veaMqa5pT4ApJKiMmdOXnStCLAlCVg0I+IYtvAuE4oFYYbhtFaTqs5
+    q2upeEjLAgMBAAECggEAC+46mKIkA+8tOa+hVfaHWSslXUnjIyx47uaqB36182CV
+    bSTXJGqSQG3RLUrCkQu3M+ZroXd3LP6ha+iNoDOshi1PXdk8SLHSOkiNLAKuomyr
+    fUMCajA8Dreni3YiIy97WgIuo890Hp1dq5DqU5dDfz6z2PRfG11/pFM1Msfm2nIE
+    4yLBDotAq0kCHUVfop8Cfqr9lHUh05QDpH0bb1d9RmTCxt4J/EdSufqVJcKMn4EP
+    3CcXsAsqDPO5UPJlrKzgZXSP+S4jnv+aJktulu8jaahbhVqgDjeN27WpAJ6wvSqj
+    d22gmkKYftaetkyRfOfGRj1zJDxEaecK5UaDlXKrEQKBgQDVnAuRqONktdNV6u6c
+    Vt2v/3Rn8BYgDa07PhIHEhY+LYMhd7QfxFnYf83vD5w9K+UMTa1wxUbuuSYl7/y0
+    EccS0CoLT1QmATmJHinfueR+eDwYxbzTyVwKmtgxpIcRiSfP9YKoxNmiXuUFi/Up
+    v4duL8ymgguFsvv3QQPuVknEqQKBgQC3/WTUYO94IVh094HgeeISHbXHcYwQNyII
+    EyCz5PJNNWwfTgtC/C9h6hRkDdm47vnFbWRsQ8vZT7DMgknpxozBBZMfRqnqsHgJ
+    bZv8eLBBUkgrCxfDGouxWzq6aGWtoWU49yAVTttluz3YdDIxM6TTzhNsKBAl5WCi
+    9znrNM8WUwKBgGOJuo5en8/PNrKjrhrmE5mutUS1yOmY1e90RhxLXlgNBzzyNdpT
+    ufY73++VW53ZtXsdO0QAecRGPLOS+DPE0PpATEdG6RRon7H4f1TEn+gbCQ4WHp6m
+    ByDd9P51B4exXP74DbGtQSj7hUcnZ8/Tcz1yQrAYi1v7ApS+FCHczbU5AoGAbLEp
+    K73IOjOYyiCdfTsDrqgWhygxEjM/y31hSGTsL2hr42J7jKrmYvWh7imwgWvL6jHh
+    rYOvnUVSsL4XZB+Db1QXwdZA8wAlKYyzJcc2eKBfOe5nrz6zX6cBXrXlu1kpLynu
+    rifTvJmMw56BOEfGC8ol9zMDtx92o09hy+16mTkCgYB/vpagfczK08yqprIVxCbk
+    1RWs66PtvncYPpxSFT8gXS496QMb6B7SU6yiVY/g4G9n4EbI9i7cjPHR53xvrx9d
+    zWnMRYb09WWaaUcKoVXsz3yMKJiTNYpZcypq3jjy+C0DJdLkVXQlAFxW+9Y2bxds
+    /mm3ScRJHCobduafPunF0A==
+    -----END PRIVATE KEY-----
 ---
 apiVersion: v1
 kind: ConfigMap
@@ -49,7 +108,6 @@ data:
     X07oICWCk3f5HTW0Mlhh1DD2TjgJOOP/w3IgbGAJwCYN4LpMIrA0Rkqjz4UvMOo7
     lje2upM5IvFzTRPRuo15jOO7N6+fn8Y=
     -----END CERTIFICATE-----
-
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -58,18 +116,15 @@ metadata:
   namespace: web
 spec:
   parentRefs:
-    - name: http-gw
-      sectionName: bnk-listener
-
+  - name: http-gw
+    sectionName: bnk-listener
   hostnames:
-    - coffee.f5bnk.com
-
+  - coffee.f5bnk.com
   rules:
-    - backendRefs:
-        - name: coffee-pool
-          kind: Pool
-          group: k8s.f5net.com
-
+  - backendRefs:
+    - name: coffee-pool
+      kind: Pool
+      group: k8s.f5net.com
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
@@ -78,18 +133,15 @@ metadata:
   namespace: web
 spec:
   parentRefs:
-    - name: http-gw
-      sectionName: bnk-listener
-
+  - name: http-gw
+    sectionName: bnk-listener
   hostnames:
-    - mismatch.f5bnk.com
-
+  - mismatch.f5bnk.com
   rules:
-    - backendRefs:
-        - name: tea-pool
-          kind: Pool
-          group: k8s.f5net.com
-
+  - backendRefs:
+    - name: tea-pool
+      kind: Pool
+      group: k8s.f5net.com
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: BackendTLSPolicy
@@ -98,19 +150,18 @@ metadata:
   namespace: web
 spec:
   targetRefs:
-    - group: k8s.f5net.com
-      kind: Pool
-      name: coffee-pool
+  - group: k8s.f5net.com
+    kind: Pool
+    name: coffee-pool
   validation:
     hostname: coffee.f5bnk.com
     subjectAltNames:
-      - type: Hostname
-        hostname: coffee.f5bnk.com
+    - type: Hostname
+      hostname: coffee.f5bnk.com
     caCertificateRefs:
-      - name: backend-ca
-        group: ""
-        kind: ConfigMap
-
+    - name: backend-ca
+      group: ''
+      kind: ConfigMap
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: BackendTLSPolicy
@@ -119,19 +170,18 @@ metadata:
   namespace: web
 spec:
   targetRefs:
-    - group: k8s.f5net.com
-      kind: Pool
-      name: tea-pool
+  - group: k8s.f5net.com
+    kind: Pool
+    name: tea-pool
   validation:
     hostname: coffee.f5bnk.com
     subjectAltNames:
-      - type: Hostname
-        hostname: coffee.f5bnk.com
+    - type: Hostname
+      hostname: coffee.f5bnk.com
     caCertificateRefs:
-      - name: backend-ca
-        group: ""
-        kind: ConfigMap
-
+    - name: backend-ca
+      group: ''
+      kind: ConfigMap
 ---
 apiVersion: k8s.f5net.com/v1
 kind: Pool
@@ -140,9 +190,8 @@ metadata:
   namespace: web
 spec:
   members:
-    - address: "30.0.0.10"
-      port: 443
-
+  - address: 30.0.0.10
+    port: 443
 ---
 apiVersion: k8s.f5net.com/v1
 kind: Pool
@@ -151,5 +200,5 @@ metadata:
   namespace: web
 spec:
   members:
-    - address: "30.0.0.11"
-      port: 443
+  - address: 30.0.0.11
+    port: 443

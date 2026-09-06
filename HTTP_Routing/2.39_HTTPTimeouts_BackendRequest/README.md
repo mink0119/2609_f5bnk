@@ -43,3 +43,7 @@ echo 'backend 지연 > 2s 이면 개별 요청 timeout. backendRequest > request
 ```bash
 kubectl delete -f gw-http-route.yaml
 ```
+
+## live 결과
+
+Accepted=True. `/delay/5` → 200 in 5.01s (`backendRequest: 2s` 미적용). timeout iRule 없음.

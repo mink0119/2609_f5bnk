@@ -1,3 +1,6 @@
+# TLSRoute kind / listener protocol TLS 는 BNK에서 UnsupportedProtocol.
+# BNK native Passthrough: Gateway protocol TCP :443 + L4Route → 백엔드 TLS :443.
+# Gateway가 TLS를 종료하지 않으므로 client가 보는 인증서는 백엔드 coffee.crt.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -12,32 +15,28 @@ spec:
 
   listeners:
     - name: bnk-listener
-      protocol: TLS
+      protocol: TCP
       port: 443
-
-      tls:
-        mode: Passthrough
 
       allowedRoutes:
         namespaces:
           from: All
 
         kinds:
-          - kind: TLSRoute
+          - kind: L4Route
+            group: gateway.k8s.f5net.com
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: TLSRoute
+apiVersion: gateway.k8s.f5net.com/v1
+kind: L4Route
 metadata:
   name: tls-passthrough-route
   namespace: web
 spec:
+  protocol: TCP
   parentRefs:
     - name: tls-gw
       sectionName: bnk-listener
-
-  hostnames:
-    - coffee.f5bnk.com
 
   rules:
     - backendRefs:

@@ -1,3 +1,4 @@
+# Gateway API UDPRoute kind 미지원. BNK native: UDP + L4Route weight. echo :9053
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -18,17 +19,18 @@ spec:
       allowedRoutes:
         namespaces:
           from: All
-
         kinds:
-          - kind: UDPRoute
+          - kind: L4Route
+            group: gateway.k8s.f5net.com
 
 ---
-apiVersion: gateway.networking.k8s.io/v1
-kind: UDPRoute
+apiVersion: gateway.k8s.f5net.com/v1
+kind: L4Route
 metadata:
   name: udp-weight-route
   namespace: web
 spec:
+  protocol: UDP
   parentRefs:
     - name: udp-gw
       sectionName: bnk-listener
