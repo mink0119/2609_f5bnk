@@ -2,7 +2,8 @@
 
 Gateway API `kind: TLSRoute` / listener `protocol: TLS` 는 BNK에서 미지원.  
 BNK native는 **TCP :443 + L4Route** 로 암호화 stream을 백엔드 TLS :443에 그대로 전달한다.  
-client가 보는 인증서는 Gateway Secret이 아니라 백엔드 `coffee.crt`.
+client가 보는 인증서는 Gateway Secret이 아니라 백엔드 `coffee.crt` / `tea.crt`.  
+L4Route backendRefs coffee/tea weight 1:1 로 패스스루 LB를 확인한다.
 
 ## 구성
 
@@ -10,6 +11,7 @@ client가 보는 인증서는 Gateway Secret이 아니라 백엔드 `coffee.crt`
 flowchart LR
   C[Client TLS] --> GW["tls-gw TCP :443"]
   GW -->|L4Route 암호화 그대로| P1["coffee-pool TLS :443"]
+  GW -->|L4Route 암호화 그대로| P2["tea-pool TLS :443"]
 ```
 
 ## 적용
@@ -22,16 +24,21 @@ kubectl apply -f gw-tls-route.yaml
 
 ## 클라이언트 검증
 
-### 1. e2e TLS — 백엔드 인증서
+### 1. e2e TLS — 백엔드 인증서 / 패스스루 LB
 
 ```bash
 echo | openssl s_client -connect 40.30.20.20:443 -servername coffee.f5bnk.com -showcerts 2>/dev/null | openssl x509 -noout -subject -ext subjectAltName -fingerprint -sha256
 curl -k --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
+
+for i in $(seq 1 20); do
+  curl -sk --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
+  echo
+done | sort | uniq -c
 ```
 
 **기대 응답**
-- subject/SAN `coffee.f5bnk.com`, fingerprint = 백엔드 `/etc/nginx/poc-certs/coffee.crt`
-- Body: `COFFEE TLS - 30.0.0.10`
+- Gateway Secret이 아니라 백엔드 인증서. coffee면 `CN=coffee.f5bnk.com`, tea면 `CN=tea.f5bnk.com`
+- Body: `COFFEE TLS - 30.0.0.10` 또는 `TEA TLS - 30.0.0.11` 이 둘 다 나와야 LB
 - HTTP :80 은 이 Gateway에 없음 (timeout)
 
 ## 정리

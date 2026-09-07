@@ -1,6 +1,7 @@
-# TLSRoute kind / listener protocol TLS 는 BNK에서 UnsupportedProtocol.
-# BNK native Passthrough: Gateway protocol TCP :443 + L4Route → 백엔드 TLS :443.
-# Gateway가 TLS를 종료하지 않으므로 client가 보는 인증서는 백엔드 coffee.crt / tea.crt.
+# 3.4 v2 — TLSRoute 없이 Gateway listener tls.mode: Passthrough
+# 본파일 gw-tls-route.yaml 은 TCP + L4Route.
+# 이 v2 는 protocol TLS + Passthrough. 백엔드는 BNK native HTTPRoute → Pool :443.
+# https://gateway-api.sigs.k8s.io/reference/api-types/tlsroute/
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -15,39 +16,37 @@ spec:
 
   listeners:
     - name: bnk-listener
-      protocol: TCP
+      protocol: TLS
       port: 443
+
+      tls:
+        mode: Passthrough
 
       allowedRoutes:
         namespaces:
           from: All
-
         kinds:
-          - kind: L4Route
-            group: gateway.k8s.f5net.com
+          - kind: HTTPRoute
 
 ---
-apiVersion: gateway.k8s.f5net.com/v1
-kind: L4Route
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
 metadata:
   name: tls-passthrough-route
   namespace: web
 spec:
-  protocol: TCP
   parentRefs:
     - name: tls-gw
       sectionName: bnk-listener
+
+  hostnames:
+    - coffee.f5bnk.com
 
   rules:
     - backendRefs:
         - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
-          weight: 1
-        - name: tea-pool
-          kind: Pool
-          group: k8s.f5net.com
-          weight: 1
 
 ---
 apiVersion: k8s.f5net.com/v1
@@ -58,15 +57,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 443
-
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: tea-pool
-  namespace: web
-spec:
-  members:
-    - address: "30.0.0.11"
       port: 443

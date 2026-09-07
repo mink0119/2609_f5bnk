@@ -1,7 +1,11 @@
+# 3.3 v2 backup — Gateway API TLSRoute (Passthrough)
+# 본 파일 gw-tls-route.yaml 은 BNK native HTTPS Terminate + HTTPRoute.
+# 이 v2 는 공식 TLSRoute: ClientHello SNI 로 backend 선택, Gateway는 TLS 미종료.
+# https://gateway-api.sigs.k8s.io/reference/api-types/tlsroute/
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
-  name: http-gw
+  name: tls-gw
   namespace: web
 spec:
   gatewayClassName: f5-bnk-gateway-class
@@ -12,76 +16,54 @@ spec:
 
   listeners:
     - name: bnk-listener
-      protocol: HTTP
-      port: 80
+      protocol: TLS
+      port: 443
+
+      tls:
+        mode: Passthrough
 
       allowedRoutes:
         namespaces:
           from: All
-
         kinds:
-          - kind: HTTPRoute
+          - kind: TLSRoute
 
 ---
 apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+kind: TLSRoute
 metadata:
-  name: coffee-route
+  name: tls-sni-coffee
   namespace: web
 spec:
   parentRefs:
-    - name: http-gw
+    - name: tls-gw
       sectionName: bnk-listener
 
   hostnames:
     - coffee.f5bnk.com
 
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /login
-
-      backendRefs:
+    - backendRefs:
         - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
 
 ---
 apiVersion: gateway.networking.k8s.io/v1
-kind: HTTPRoute
+kind: TLSRoute
 metadata:
-  name: tea-route
+  name: tls-sni-tea
   namespace: web
 spec:
   parentRefs:
-    - name: http-gw
+    - name: tls-gw
       sectionName: bnk-listener
 
   hostnames:
     - tea.f5bnk.com
 
   rules:
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-          headers:
-            - type: Exact
-              name: env
-              value: canary
-
-      backendRefs:
-        - name: httpbin-pool
-          kind: Pool
-          group: k8s.f5net.com
-
-    - matches:
-        - path:
-            type: PathPrefix
-            value: /
-
-      backendRefs:
+    - backendRefs:
         - name: tea-pool
           kind: Pool
           group: k8s.f5net.com
@@ -95,7 +77,7 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 80
+      port: 443
 
 ---
 apiVersion: k8s.f5net.com/v1
@@ -106,15 +88,4 @@ metadata:
 spec:
   members:
     - address: "30.0.0.11"
-      port: 80
-
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: httpbin-pool
-  namespace: web
-spec:
-  members:
-    - address: "30.0.0.12"
-      port: 80
+      port: 443

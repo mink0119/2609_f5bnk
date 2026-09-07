@@ -10,8 +10,8 @@ Secret `web-tls-cert` 는 YAML에 포함되어 있습니다 (`backend/certs/gw-t
 ```mermaid
 flowchart LR
   C[Client HTTPS] --> GW["tls-gw HTTPS:443 Terminate<br/>Secret web-tls-cert"]
-  GW -->|복호화된 HTTP| R[HTTPRoute]
-  R --> P1[coffee-pool HTTP :80]
+  GW -->|복호화된 HTTP Host coffee| P1[coffee-pool HTTP :80]
+  GW -->|복호화된 HTTP Host tea| P2[tea-pool HTTP :80]
 ```
 
 ## 적용
@@ -24,17 +24,18 @@ kubectl apply -f gw-http-route.yaml
 
 ## 클라이언트 검증
 
-### 1. Terminate 후 HTTP 전달
+### 1. Terminate 후 HTTP Host 분기
 
 ```bash
 echo | openssl s_client -connect 40.30.20.20:443 -servername coffee.f5bnk.com 2>/dev/null | openssl x509 -noout -subject
 curl -k --resolve coffee.f5bnk.com:443:40.30.20.20 https://coffee.f5bnk.com/
+curl -k --resolve tea.f5bnk.com:443:40.30.20.20 https://tea.f5bnk.com/
 ```
 
 **기대 응답**
-- 인증서는 Gateway Secret (`CN=coffee.f5bnk.com`). 백엔드 `COFFEE TLS` 인증서가 아님
-- HTTP/1.1 200
-- Body: `COFFEE SERVER - 30.0.0.10` (plain HTTP :80)
+- 인증서는 Gateway Secret (`CN=coffee.f5bnk.com`). 백엔드 TLS 인증서가 아님
+- `https://coffee.f5bnk.com/` → `COFFEE SERVER - 30.0.0.10` (plain HTTP :80)
+- `https://tea.f5bnk.com/` → `TEA SERVER - 30.0.0.11`
 
 ### 2. HTTP 80으로는 이 Listener 안 씀
 

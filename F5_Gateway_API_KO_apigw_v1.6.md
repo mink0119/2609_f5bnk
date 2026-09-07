@@ -171,8 +171,8 @@
 - 번호: 2.21
 - 중분류: Request Header Modifier
 - 세부항목: add
-- 설명: request header가 없을 때만 지정 값을 추가. 이미 있으면 변경하지 않음
-- 테스트 시나리오(명세파일 등): 요청에 대상 header가 없을 때만 추가되고, 이미 있으면 기존 값이 유지되는지 확인
+- 설명: request header가 없으면 생성하고, 이미 있으면 기존 값에 지정 값을 추가
+- 테스트 시나리오(명세파일 등): 요청에 대상 header가 없으면 생성되고, 이미 있으면 기존 값과 추가 값이 모두 전달되는지 확인
 - 공식 출처: Core | 기존 v1.4 판단 유지 | https://gateway-api.sigs.k8s.io/guides/user-guides/http-header-modifier/
 
 ## 2.22
