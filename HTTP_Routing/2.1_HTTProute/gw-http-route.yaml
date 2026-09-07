@@ -96,6 +96,12 @@ spec:
   members:
     - address: "30.0.0.10"
       port: 80
+  monitors:
+    http:
+      - interval: 5
+        timeout: 16
+        sendString: "GET / HTTP/1.0\r\n\r\n"
+        receiveString: "200"
 
 ---
 apiVersion: k8s.f5net.com/v1
@@ -107,6 +113,12 @@ spec:
   members:
     - address: "30.0.0.11"
       port: 80
+  monitors:
+    http:
+      - interval: 5
+        timeout: 16
+        sendString: "GET / HTTP/1.0\r\n\r\n"
+        receiveString: "200"
 
 ---
 apiVersion: k8s.f5net.com/v1
@@ -118,3 +130,9 @@ spec:
   members:
     - address: "30.0.0.12"
       port: 80
+  monitors:
+    http:
+      - interval: 5
+        timeout: 16
+        sendString: "GET / HTTP/1.0\r\n\r\n"
+        receiveString: "200"

@@ -14,18 +14,7 @@ spec:
   listeners:
     - name: bnk-listener
       protocol: TCP
-      port: 80
-
-      allowedRoutes:
-        namespaces:
-          from: All
-        kinds:
-          - kind: L4Route
-            group: gateway.k8s.f5net.com
-
-    - name: bnk-listener-8080
-      protocol: TCP
-      port: 8080
+      port: 22
 
       allowedRoutes:
         namespaces:
@@ -51,24 +40,11 @@ spec:
         - name: coffee-pool
           kind: Pool
           group: k8s.f5net.com
-
----
-apiVersion: gateway.k8s.f5net.com/v1
-kind: L4Route
-metadata:
-  name: tcp-listener-8080
-  namespace: web
-spec:
-  protocol: TCP
-  parentRefs:
-    - name: tcp-gw
-      sectionName: bnk-listener-8080
-
-  rules:
-    - backendRefs:
+          weight: 1
         - name: tea-pool
           kind: Pool
           group: k8s.f5net.com
+          weight: 1
 
 ---
 apiVersion: k8s.f5net.com/v1
@@ -79,8 +55,11 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
-      port: 80
-
+      port: 22
+  monitors:
+    tcp:
+      - interval: 5
+        timeout: 16
 ---
 apiVersion: k8s.f5net.com/v1
 kind: Pool
@@ -90,5 +69,9 @@ metadata:
 spec:
   members:
     - address: "30.0.0.11"
-      port: 80
+      port: 22
+  monitors:
+    tcp:
+      - interval: 5
+        timeout: 16
 

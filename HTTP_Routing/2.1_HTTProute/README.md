@@ -18,6 +18,19 @@ kubectl apply -f gw-http-route.yaml
 
 명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.
 
+Pool 헬스체크는 HTTPRoute가 아니라 `spec.monitors.http` 입니다.  
+5초마다 `GET /` 을 보내고 응답에 `200` 이 있으면 멤버를 up 으로 둡니다.
+
+```bash
+kubectl get pool -n web
+kubectl get pool coffee-pool -n web -o yaml
+```
+
+**기대 응답**
+- Pool `READY=True` / `CR config sent to all grpc endpoints`
+- `spec.monitors.http` 가 세 Pool 모두에 있음
+- 백엔드가 내려가면 (예: coffee `30.0.0.10:80` 중지) 해당 Host는 500, 살아 있는 Pool은 그대로 200
+
 ## 클라이언트 검증
 
 ### 1. coffee /login
