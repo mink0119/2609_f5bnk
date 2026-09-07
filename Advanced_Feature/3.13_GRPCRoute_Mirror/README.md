@@ -19,14 +19,16 @@ flowchart LR
 kubectl apply -f gw-grpc-route.yaml
 ```
 
-명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.
+명령은 클라이언트 **ncurity** 에서 실행합니다.  
+`"$HOME/poc-grpc"` 는 3.10 README 블록을 한 번 실행해 둡니다.
 
 ## 클라이언트 검증
 
 ### 1. primary 응답 유지
 
 ```bash
-grpcurl -plaintext -authority grpc.f5bnk.com \
+"$HOME/poc-grpc/grpcurl" -plaintext -authority grpc.f5bnk.com \
+  -import-path "$HOME/poc-grpc" -proto hello.proto -d '{"name":"BNK"}' \
   40.30.20.20:80 hello.HelloService/SayHello
 ```
 
@@ -39,7 +41,8 @@ grpcurl -plaintext -authority grpc.f5bnk.com \
 
 ```bash
 for i in $(seq 1 40); do
-  grpcurl -plaintext -authority grpc.f5bnk.com \
+  "$HOME/poc-grpc/grpcurl" -plaintext -authority grpc.f5bnk.com \
+    -import-path "$HOME/poc-grpc" -proto hello.proto -d '{"name":"BNK"}' \
     40.30.20.20:80 hello.HelloService/SayHello >/dev/null
 done
 ```

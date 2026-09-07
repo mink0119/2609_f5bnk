@@ -27,6 +27,7 @@ Gateway 이름이 항목마다 같으므로, 다음 항목으로 가기 전에 �
 | Gateway name | HTTP/gRPC → `http-gw`, TCP → `tcp-gw`, UDP → `udp-gw`, TLS → `tls-gw` |
 | Listener | `bnk-listener` (포트가 둘이면 `bnk-listener-8080` 처럼 추가) |
 | VIP | `40.30.20.20` (`addresses.type: IPAddress`) |
+| 클라이언트 | `ncurity` (`root@ncurity:~`). 레포는 여기 없음. VIP는 IP 터널 |
 | Backend | `kind: Pool`, `group: k8s.f5net.com` |
 | 기본 Host | `coffee.f5bnk.com` (hostname 항목이 아니면 이 값을 유지) |
 
@@ -83,8 +84,10 @@ Advanced_Feature/                 # 3.x
 5. `kubectl delete -f <yaml>`
 6. 필요한 경우 GW API 제약만 한두 줄
 
-적용·검증 명령은 VIP `40.30.20.20` 에 IP 터널로 도달하는 클라이언트에서 실행합니다.  
-k8s 마스터에서 VIP로 직접 curl 하지 않습니다. Host는 `--resolve <host>:80:40.30.20.20` 을 씁니다.
+적용·검증 명령은 클라이언트 `ncurity` 에서 실행합니다.  
+k8s 마스터(`/root/bnk/web/poc`)에서 VIP로 curl/grpcurl 하지 않습니다. Host는 `--resolve <host>:80:40.30.20.20` 을 씁니다.
+
+gRPC(3.10–3.15)는 ncurity의 `$HOME/poc-grpc/` (공식 `grpcurl` 바이너리 + `hello.proto`)가 필요합니다. 만드는 법은 `Advanced_Feature/3.10_GRPCRoute_Method/README.md` 입니다. PATH의 snap `grpcurl` 은 쓰지 않습니다.
 
 ## YAML을 쓸 때
 

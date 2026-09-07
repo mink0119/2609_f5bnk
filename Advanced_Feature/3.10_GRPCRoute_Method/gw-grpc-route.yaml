@@ -1,3 +1,4 @@
+# 3.10 method 매칭: SayHello → coffee :50051, SayGoodbye → tea :50051
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -47,6 +48,16 @@ spec:
           kind: Pool
           group: k8s.f5net.com
 
+    - matches:
+        - method:
+            service: hello.HelloService
+            method: SayGoodbye
+
+      backendRefs:
+        - name: tea-pool
+          kind: Pool
+          group: k8s.f5net.com
+
 ---
 apiVersion: k8s.f5net.com/v1
 kind: Pool
@@ -56,4 +67,15 @@ metadata:
 spec:
   members:
     - address: "30.0.0.10"
+      port: 50051
+
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
       port: 50051

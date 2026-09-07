@@ -39,6 +39,11 @@ class HelloServiceStub:
                 request_serializer=hello__pb2.HelloRequest.SerializeToString,
                 response_deserializer=hello__pb2.HelloReply.FromString,
                 _registered_method=True)
+        self.SayGoodbye = channel.unary_unary(
+                '/hello.HelloService/SayGoodbye',
+                request_serializer=hello__pb2.HelloRequest.SerializeToString,
+                response_deserializer=hello__pb2.HelloReply.FromString,
+                _registered_method=True)
 
 
 class HelloServiceServicer:
@@ -50,11 +55,22 @@ class HelloServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def SayGoodbye(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_HelloServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
             'SayHello': grpc.unary_unary_rpc_method_handler(
                     servicer.SayHello,
+                    request_deserializer=hello__pb2.HelloRequest.FromString,
+                    response_serializer=hello__pb2.HelloReply.SerializeToString,
+            ),
+            'SayGoodbye': grpc.unary_unary_rpc_method_handler(
+                    servicer.SayGoodbye,
                     request_deserializer=hello__pb2.HelloRequest.FromString,
                     response_serializer=hello__pb2.HelloReply.SerializeToString,
             ),
@@ -84,6 +100,33 @@ class HelloService:
             request,
             target,
             '/hello.HelloService/SayHello',
+            hello__pb2.HelloRequest.SerializeToString,
+            hello__pb2.HelloReply.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def SayGoodbye(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/hello.HelloService/SayGoodbye',
             hello__pb2.HelloRequest.SerializeToString,
             hello__pb2.HelloReply.FromString,
             options,

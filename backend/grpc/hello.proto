@@ -4,6 +4,7 @@ package hello;
 
 service HelloService {
   rpc SayHello (HelloRequest) returns (HelloReply);
+  rpc SayGoodbye (HelloRequest) returns (HelloReply);
 }
 
 message HelloRequest {

@@ -17,20 +17,24 @@ flowchart LR
 kubectl apply -f gw-grpc-route.yaml
 ```
 
-명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.
+명령은 클라이언트 **ncurity** 에서 실행합니다.  
+`"$HOME/poc-grpc"` 는 3.10 README 블록을 한 번 실행해 둡니다.
 
 ## 클라이언트 검증
 
 ### 1. 가중 분배
 
 ```bash
-for i in $(seq 1 20); do
-  grpcurl -plaintext -authority grpc.f5bnk.com 40.30.20.20:80 hello.HelloService/SayHello
-done
+for i in $(seq 1 40); do
+    "$HOME/poc-grpc/grpcurl" -plaintext -authority grpc.f5bnk.com \
+    -import-path "$HOME/poc-grpc" -proto hello.proto -d '{"name":"BNK"}' \
+    40.30.20.20:80 hello.HelloService/SayHello
+done | sort | uniq -c
 ```
 
 **기대 응답**
-- coffee 쪽이 더 많은 응답. 약 70/30
+- coffee / tea 가 대략 70/30. 40회면 반드시 28/12는 아님.
+- `-proto` 없이 호출하면 Reflection RST_STREAM.
 
 ## 정리
 
@@ -40,4 +44,5 @@ kubectl delete -f gw-grpc-route.yaml
 
 ## 참고
 
-BNK 2.3: GRPCRoute 는 listener 당 하나의 backendRef 를 권장. weight 미지원이면 Accepted=False 또는 한쪽만 사용.
+BNK 2.3 GRPCRoute: **`backendRefs.weight` 는 지원**. hostnames / matches / filters / sessionPersistence / 한 CR 안 여러 rule 은 미지원.  
+https://clouddocs.f5.com/bigip-next-for-kubernetes/latest/custom-resource-definitions/bnk-gateway-api-grpcroute.html
