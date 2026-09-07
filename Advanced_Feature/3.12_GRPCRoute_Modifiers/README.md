@@ -42,4 +42,6 @@ kubectl delete -f gw-grpc-route.yaml
 
 ## live 결과
 
-Accepted=True. 백엔드 md에 `X-PoC-Add` 없음. 응답/trailer에 `X-PoC-Res-Add` 없음. gRPC iRule 없음.
+Accepted=True. VIP → coffee 200 (`COFFEE GRPC - 30.0.0.10 hello BNK`).
+`grpcurl -v`: 응답 헤더에 `X-PoC-Res-Add` 없음, trailer 비어 있음 (`x-echo-x-poc-add` 없음 → 요청 add도 미적용).
+BNK GRPCRoute `filters` 미지원. gRPC iRule 없음.
