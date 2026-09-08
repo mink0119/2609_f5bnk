@@ -54,3 +54,20 @@ curl --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
 ```bash
 kubectl delete -f gw-http-route.yaml
 ```
+
+## iRule 우회
+
+네이티브 `path.type: RegularExpression` 은 미적용. `gw-http-route_iRule.yaml` 은 Tcl `regexp` 후 `pool web-pool-coffee-pool-pool` / `web-pool-tea-pool-pool`.  
+Gateway API native 가 아니라 TMM 우회. 네이티브 YAML 과 **같이 apply 하지 않는다.**
+
+```bash
+kubectl apply -f gw-http-route_iRule.yaml
+```
+
+클라이언트 검증 명령·기대 응답은 위와 동일.
+
+TMM pool 이름은 `web-pool-<Pool.name>-pool`.
+
+```bash
+kubectl delete -f gw-http-route_iRule.yaml
+```

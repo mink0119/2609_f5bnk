@@ -7,10 +7,10 @@ CORS는 매칭 Origin에 헤더를 붙이는 필터다. 비매칭 Origin도 요�
 
 ```mermaid
 flowchart LR
-  C[Origin] --> VIP[VIP]
-  VIP -->|/creds exact + creds true| P[coffee]
-  VIP -->|/any origin * creds false| P
-  VIP -->|/wild https://*.f5bnk.com| P
+  B[Browser] -->|"Origin"| VIP[VIP]
+  VIP -->|"/creds ACAO echo + Credentials true"| B
+  VIP -->|"/any ACAO *"| B
+  VIP -->|"/wild ACAO echo"| B
 ```
 
 ## 적용
@@ -75,4 +75,19 @@ curl -sS -D - -o /tmp/gw-body -H 'Origin: https://evil.example.com' --resolve co
 
 ```bash
 kubectl delete -f gw-http-route.yaml
+```
+
+## iRule 우회
+
+네이티브 `type: CORS` 미적용. `gw-http-route_iRule.yaml` 은 path별 Origin allowlist (`/creds` exact+creds, `/any` `*`, `/wild` `https://*.f5bnk.com`). 카탈로그 고정 ACAO 삽입이 아님.  
+네이티브 YAML 과 같이 apply 하지 않는다.
+
+```bash
+kubectl apply -f gw-http-route_iRule.yaml
+```
+
+클라이언트 검증 명령·기대 응답은 위와 동일.
+
+```bash
+kubectl delete -f gw-http-route_iRule.yaml
 ```

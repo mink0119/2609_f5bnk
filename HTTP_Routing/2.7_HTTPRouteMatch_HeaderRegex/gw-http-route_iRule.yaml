@@ -1,0 +1,94 @@
+# 2.7 iRule 우회. native headers RegularExpression 미적용.
+# TMM pool 이름: web-pool-<Pool.name>-pool
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: header-regex-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - tea.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: httpbin-pool
+          kind: Pool
+          group: k8s.f5net.com
+          weight: 1
+        - name: tea-pool
+          kind: Pool
+          group: k8s.f5net.com
+          weight: 1
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: httpbin-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.12"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-header-regex
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      if { [HTTP::header exists "env"] && [regexp {^canary-.*$} [HTTP::header "env"]] } {
+        pool web-pool-httpbin-pool-pool
+      } else {
+        pool web-pool-tea-pool-pool
+      }
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-header-regex
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-header-regex
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

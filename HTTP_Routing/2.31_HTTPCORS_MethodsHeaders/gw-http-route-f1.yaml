@@ -23,7 +23,7 @@ spec:
           - kind: HTTPRoute
 
 ---
-# preflight 응답 Allow-Methods/Allow-Headers 는 이 목록. 목록 밖 method는 403으로 막지 않음.
+# preflight Allow-Methods/Allow-Headers 를 이 목록으로 스탬프.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:

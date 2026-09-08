@@ -345,7 +345,7 @@
 - 세부항목: allowMethods / allowHeaders
 - 설명: preflight 요청에 허용할 method와 request header를 설정
 - F5 지원: X
-- 테스트 시나리오(명세파일 등): OPTIONS preflight의 Allow-Methods/Allow-Headers가 설정 목록과 일치하는지, 목록에 없는 method·header는 Allow 목록에 없고 요청 자체는 403으로 막지 않는지 확인
+- 테스트 시나리오(명세파일 등): OPTIONS preflight에 Allow-Methods/Allow-Headers가 YAML 목록(GET, POST / Content-Type, Authorization)으로 붙는지 확인
 - 공식 출처: Standard/Extended | v1.6 반영 | https://gateway-api.sigs.k8s.io/guides/user-guides/http-cors/
 
 ## 2.32
@@ -356,7 +356,7 @@
 - 세부항목: exposeHeaders / maxAge
 - 설명: client에 노출할 response header와 preflight cache 시간을 설정
 - F5 지원: X
-- 테스트 시나리오(명세파일 등): OPTIONS preflight의 Max-Age가 설정 초인지, 실제 GET의 Expose-Headers가 설정 목록과 일치하고 Max-Age는 없는지 확인
+- 테스트 시나리오(명세파일 등): OPTIONS preflight에 Max-Age 3600과 Expose-Headers(X-Request-Id, X-Echo-Host)가 붙는지 확인
 - 공식 출처: Standard/Extended | v1.6 반영 | https://gateway-api.sigs.k8s.io/guides/user-guides/http-cors/
 
 ## 2.33

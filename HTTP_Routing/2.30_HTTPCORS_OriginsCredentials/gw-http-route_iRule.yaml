@@ -1,0 +1,125 @@
+# 2.30 iRule 우회. native type: CORS 미적용. 카탈로그 고정 ACAO 가 아니라 path별 allowlist.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: cors-origins-credentials-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /creds
+      backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /any
+      backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+    - matches:
+        - path:
+            type: PathPrefix
+            value: /wild
+      backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-cors-origins
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set cors_origin [HTTP::header "Origin"]
+      set cors_path [HTTP::path]
+      set cors_acao ""
+      set cors_creds 0
+
+      if { $cors_path starts_with "/creds" } {
+        if { $cors_origin eq "https://shop.f5bnk.com" } {
+          set cors_acao $cors_origin
+          set cors_creds 1
+        }
+      } elseif { $cors_path starts_with "/any" } {
+        if { $cors_origin ne "" } {
+          set cors_acao "*"
+        }
+      } elseif { $cors_path starts_with "/wild" } {
+        if { [regexp {^https://.+\.f5bnk\.com$} $cors_origin] } {
+          set cors_acao $cors_origin
+        }
+      }
+    }
+    when HTTP_RESPONSE {
+      if { [info exists cors_acao] && $cors_acao ne "" } {
+        HTTP::header replace "Access-Control-Allow-Origin" $cors_acao
+        if { [info exists cors_creds] && $cors_creds == 1 } {
+          HTTP::header replace "Access-Control-Allow-Credentials" "true"
+        } else {
+          HTTP::header remove "Access-Control-Allow-Credentials"
+        }
+      } else {
+        HTTP::header remove "Access-Control-Allow-Origin"
+        HTTP::header remove "Access-Control-Allow-Credentials"
+      }
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-cors-origins
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-cors-origins
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

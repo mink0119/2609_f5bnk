@@ -1,0 +1,53 @@
+# F5 SPK Ingress TCP — Service + Endpoints (클러스터 밖 30.0.0.10/11:22)
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coffee-tcp
+  namespace: web
+spec:
+  ports:
+    - name: tcp
+      port: 22
+      protocol: TCP
+      targetPort: 22
+---
+apiVersion: v1
+kind: Endpoints
+metadata:
+  name: coffee-tcp
+  namespace: web
+subsets:
+  - addresses:
+      - ip: 30.0.0.10
+      #- ip: 30.0.0.11
+    ports:
+      - name: tcp
+        port: 22
+        protocol: TCP
+---
+apiVersion: ingresstcp.k8s.f5net.com/v1
+kind: F5SPKIngressTCP
+metadata:
+  name: coffee-ingresstcp
+  namespace: web
+service:
+  name: coffee-tcp
+  port: 22
+spec:
+  destinationAddress: "40.30.20.20"
+  destinationPort: 22
+  loadBalancingMethod: ROUND_ROBIN
+  snat: SRC_TRANS_AUTOMAP
+  # serviceDownAction: POOLMBR_ACTION_NONE
+  # serviceDownAction: POOLMBR_ACTION_REJECT
+  # serviceDownAction: POOLMBR_ACTION_DROP
+  # serviceDownAction: POOLMBR_ACTION_RESELECT
+monitors:
+  tcp:
+    - interval: 5
+      timeout: 16
+      # 이 CRD monitors.tcp 실제 사용 필드는 interval / timeout 뿐 (connect-only).
+      # sendString / receiveString 없음 — 그건 kind: Pool.
+      # username / password / serversslProfileName 은 스키마에 있으나
+      # icmp/tcp 가 동일한 HTTP 모니터 struct 를 복붙한 것. TCP 모니터 옵션이 아님.

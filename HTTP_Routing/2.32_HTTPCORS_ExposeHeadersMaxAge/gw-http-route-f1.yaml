@@ -23,8 +23,7 @@ spec:
           - kind: HTTPRoute
 
 ---
-# maxAge: 초 단위 int (기본 5). preflight 의 Access-Control-Max-Age.
-# exposeHeaders: 실제 CORS 응답에서 브라우저에 노출할 헤더. coffee 가 주는 X-Request-Id / X-Echo-Host.
+# preflight 에 maxAge / exposeHeaders 를 이 값으로 스탬프.
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
 metadata:
