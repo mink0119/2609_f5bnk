@@ -35,3 +35,5 @@ curl -sS -D - -o /tmp/gw-body  --resolve coffee.f5bnk.com:80:40.30.20.20 http://
 ```bash
 kubectl delete -f gw-http-route.yaml
 ```
+
+iRule로는 불가. 전달 전 인증 서버(`httpbin-pool` `/auth`)에 **별도 HTTP 라운드트립**을 한 뒤 200만 coffee로 보내야 한다. 이 TMM에서 검증된 iRule은 현재 연결의 `HTTP_REQUEST`/`HTTP_RESPONSE`(헤더·retry·after)뿐이고, SIDEBAND `connect`/`recv` 로 인증 서버를 호출한 적이 없다.

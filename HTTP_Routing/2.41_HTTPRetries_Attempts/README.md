@@ -42,3 +42,27 @@ echo '계속 503이면 호출 수 <= 1+3. attempts=0 은 스키마 거부'
 ```bash
 kubectl delete -f gw-http-route.yaml
 ```
+
+## iRule 우회
+
+네이티브 `retry.attempts` 미적용. `gw-http-route_iRule.yaml` 은 503 에 `HTTP::retry` 최대 3회 (호출 수 ≤ 1+3).  
+네이티브 YAML 과 같이 apply 하지 않는다.
+
+```bash
+kubectl apply -f gw-http-route_iRule.yaml
+```
+
+```bash
+curl -sS -D - -o /tmp/gw-body --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
+echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl -sS -D - -o /tmp/gw-body --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/fail
+echo; echo '--- body ---'; cat /tmp/gw-body; echo
+```
+
+**기대 응답**
+- `GET /` → 200
+- `/fail` → 503. 백엔드 access log 에 같은 요청이 최대 4회
+
+```bash
+kubectl delete -f gw-http-route_iRule.yaml
+```

@@ -2,6 +2,8 @@
 
 `hello.HelloService/SayHello` 와 `SayGoodbye` 를 30.0.0.10/11/12:50051 에 올립니다. nginx HTTP :80 과는 별 프로세스입니다.
 
+서버를 처음부터 다시 만들 때는 **`../INSTALL.md`** 한 장만 따른다. 아래는 이미 nginx 가 떠 있는 호스트에 gRPC 만 추가할 때.
+
 | 역할 | 호스트 | 하는 일 |
 |---|---|---|
 | kubectl / 레포 | 마스터 `/root/bnk/web/poc` | YAML apply |

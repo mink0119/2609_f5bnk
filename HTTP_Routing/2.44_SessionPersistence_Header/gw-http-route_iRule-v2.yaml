@@ -1,0 +1,79 @@
+# 2.44 iRule 우회 v2. persist carp. persist 테이블/DSSM 불필요.
+# X-Session-ID 값을 해시 키로 같은 멤버. coffee+tea 를 한 Pool 에 둠.
+# v1 의 aaa→coffee / bbb→tea pool 명령 아님. 네이티브·v1 과 같이 apply 하지 않는다.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: session-header-carp-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: session-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: session-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+    - address: "30.0.0.11"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-session-header-carp
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set sid [HTTP::header "X-Session-ID"]
+      persist carp $sid
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-session-header-carp
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-session-header-carp
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

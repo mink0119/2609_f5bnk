@@ -59,6 +59,7 @@ Listener는 이름만 고정하고 protocol/port/kinds 는 항목에 맞게 바�
 ```
 F5_Gateway_API_KO_apigw_v1.6.md   # 기능 목록 (번호의 기준)
 README.md                         # 이 파일 — 진행 규칙만
+backend/INSTALL.md               # 백엔드 서버(192.168.48.254) 재설치
 HTTP_Routing/                     # 2.x
   2.1_HTTProute/
     gw-http-route.yaml

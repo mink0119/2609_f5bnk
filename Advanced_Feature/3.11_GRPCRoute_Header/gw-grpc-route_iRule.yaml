@@ -1,0 +1,111 @@
+# 3.11 iRule 우회. native GRPCRoute matches.headers 미적용.
+# gRPC metadata 는 HTTP/2 헤더. env Exact canary→httpbin, regexp canary-.*→tea, 그 외 coffee.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: GRPCRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: GRPCRoute
+metadata:
+  name: grpc-header-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - grpc.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+          weight: 1
+        - name: tea-pool
+          kind: Pool
+          group: k8s.f5net.com
+          weight: 1
+        - name: httpbin-pool
+          kind: Pool
+          group: k8s.f5net.com
+          weight: 1
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 50051
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
+      port: 50051
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: httpbin-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.12"
+      port: 50051
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-grpc-header
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set env [HTTP::header "env"]
+      if { $env eq "canary" } {
+        pool web-pool-httpbin-pool-pool
+      } elseif { [regexp {^canary-.*$} $env] } {
+        pool web-pool-tea-pool-pool
+      } else {
+        pool web-pool-coffee-pool-pool
+      }
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-grpc-header
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-grpc-header
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

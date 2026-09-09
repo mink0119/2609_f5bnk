@@ -1,0 +1,91 @@
+# 2.43 iRule 우회 v2. persist carp. persist 테이블/DSSM 불필요.
+# Cookie BNKSESSION 은 멤버 이름이 아니라 해시 키. 첫 요청에서 발급, 이후 같은 멤버.
+# CARP 는 현재 Pool 멤버를 해시하므로 coffee+tea 를 한 Pool 에 둠.
+# v1 의 pool 명령 / BNKSESSION=coffee|tea 아님. 네이티브·v1 과 같이 apply 하지 않는다.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: session-cookie-carp-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: session-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: session-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+    - address: "30.0.0.11"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-session-cookie-carp
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set new_ck ""
+      set ck ""
+      regexp {BNKSESSION=([^; ]+)} [HTTP::header "Cookie"] dummy ck
+      if { $ck eq "" } {
+        set ck [format %08x [expr { int(rand() * 2147483647) }]]
+        set new_ck $ck
+      }
+      persist carp $ck
+    }
+    when HTTP_RESPONSE {
+      if { $new_ck ne "" } {
+        HTTP::header insert "Set-Cookie" "BNKSESSION=$new_ck; Path=/; Max-Age=3600"
+      }
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-session-cookie-carp
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-session-cookie-carp
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

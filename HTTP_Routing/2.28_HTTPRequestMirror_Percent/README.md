@@ -46,21 +46,23 @@ done | grep -c 'COFFEE SERVER'
 - 백엔드 로그 증가량 ≈ 40(coffee) + 20(tea) = 약 60줄. tea 쪽이 전혀 안 늘면 mirror 미전달
 - tea 응답이 client에 섞이면 실패
 
-### 2. fraction 1/2
-
-```bash
-for i in $(seq 1 40); do
-  curl -sS --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/fraction
-done
-```
-
-**기대**
-- client는 항상 coffee. `TEA SERVER` 없음
-- tea 로그 수신 비율 약 1/2
-- percent와 fraction을 같이 쓰면 fraction이 우선
-
 ## 정리
 
 ```bash
 kubectl delete -f gw-http-route.yaml
+```
+
+## iRule 우회
+
+네이티브 `percent` / `fraction` 미적용. `gw-http-route_iRule.yaml` 은 `/percent`·`/fraction` 에서 `rand() < 0.5` 일 때만 2.27 과 같은 HSL 로 tea 복사.  
+네이티브 YAML 과 같이 apply 하지 않는다.
+
+```bash
+kubectl apply -f gw-http-route_iRule.yaml
+```
+
+클라이언트 검증은 위와 동일. 40회 모두 coffee body, tea 로그 약 절반.
+
+```bash
+kubectl delete -f gw-http-route_iRule.yaml
 ```

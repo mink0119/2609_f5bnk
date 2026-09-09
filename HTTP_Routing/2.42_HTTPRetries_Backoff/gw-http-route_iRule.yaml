@@ -1,0 +1,88 @@
+# 2.42 iRule 우회. native retry.backoff 미적용.
+# after { HTTP::retry } 는 비동기라 503 이 먼저 클라이언트로 나감. 같은 이벤트에서 after 1000 후 HTTP::retry $req.
+# 100ms 는 nginx access log 초 단위와 curl 체감으로 안 보임. PoC 는 1s.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: retry-backoff-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-retry-backoff
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set req [HTTP::request]
+      if { ![info exists retries] } {
+        set retries 0
+      }
+    }
+    when HTTP_RESPONSE {
+      if { [HTTP::status] == 503 && $retries < 3 } {
+        incr retries
+        after 100
+        HTTP::retry $req
+        return
+      }
+      set retries 0
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-retry-backoff
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-retry-backoff
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

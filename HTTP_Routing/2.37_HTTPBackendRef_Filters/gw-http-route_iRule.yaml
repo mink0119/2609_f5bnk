@@ -1,0 +1,106 @@
+# 2.37 iRule 우회. native backendRef.filters 는 Accepted 이나 per-backend 미적용.
+# backend 는 hostname 으로 나눔 (IP 만 보면 동일 IP 다른 port 구분 불가).
+# HTTP_REQUEST 에서 Host coffee 이면 X-Backend insert. LB_SELECTED 는 요청 시점이 아님.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: backendref-filter-coffee
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: backendref-filter-tea
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - tea.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: tea-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-backendref-filter
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set req_host [string tolower [getfield [HTTP::host] ":" 1]]
+      if { $req_host eq "coffee.f5bnk.com" } {
+        HTTP::header insert "X-Backend" "coffee"
+      }
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-backendref-filter
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-backendref-filter
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

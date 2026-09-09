@@ -11,39 +11,46 @@ flowchart LR
 ## 적용
 
 ```bash
-kubectl apply -f gw-http-route.yaml
+kubectl apply -f gw-http-route-f1.yaml
 ```
 
 명령은 VIP `40.30.20.20` 에 터널로 도달하는 클라이언트에서 실행합니다.
 
 ## 클라이언트 검증
 
-### 1. 정상 (5초 이내)
-
 ```bash
-curl -sS -D - -o /tmp/gw-body  --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/; echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl -sS -D - -o /tmp/gw-body -w 'time=%{time_total}\n' --max-time 15 --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/
+echo; echo '--- body ---'; cat /tmp/gw-body; echo
+curl -sS -D - -o /tmp/gw-body -w 'time=%{time_total}\n' --max-time 15 --resolve coffee.f5bnk.com:80:40.30.20.20 http://coffee.f5bnk.com/delay/8
+echo; echo '--- body ---'; cat /tmp/gw-body; echo
 ```
 
 **기대 응답**
-- HTTP/1.1 200
-- Body: `COFFEE SERVER - 30.0.0.10`
-
-### 2. 지연 시
-
-```bash
-echo '백엔드가 5초 넘기면 Gateway timeout (보통 504). 0s는 timeout 비활성화'
-```
-
-**기대 응답**
-- > 5s 지연이면 timeout
-- `request: 0s` 는 timeout 끔
+- `GET /` → 200 `COFFEE SERVER - 30.0.0.10`
+- `/delay/8` → 8s 200 (`request: 5s` 미적용)
 
 ## 정리
 
 ```bash
-kubectl delete -f gw-http-route.yaml
+kubectl delete -f gw-http-route-f1.yaml
 ```
 
-## live 결과
+## iRule 우회
 
-Accepted=True. `/delay/8` → 200 in 8.01s (`request: 5s` 미적용). timeout iRule 없음.
+네이티브 `timeouts.request: 5s` 미적용.  
+`after 5000` 은 동작하지만 콜백의 `HTTP::respond` 는 무시된다. `TCP::respond` 504 + `TCP::close`. 정상 응답은 `HTTP_RESPONSE` 에서 `after cancel`.  
+네이티브 YAML 과 같이 apply 하지 않는다.
+
+```bash
+kubectl apply -f gw-http-route_iRule.yaml
+```
+
+검증 명령은 위와 동일.
+
+**기대 응답**
+- `GET /` → 200 `COFFEE SERVER - 30.0.0.10`
+- `/delay/8` → 504 `gateway timeout` (~5s)
+
+```bash
+kubectl delete -f gw-http-route_iRule.yaml
+```

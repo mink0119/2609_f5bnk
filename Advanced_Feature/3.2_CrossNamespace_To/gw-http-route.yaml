@@ -63,6 +63,7 @@ spec:
   to:
     - group: k8s.f5net.com
       kind: Pool
+      name: coffee-pool
 
 ---
 apiVersion: k8s.f5net.com/v1

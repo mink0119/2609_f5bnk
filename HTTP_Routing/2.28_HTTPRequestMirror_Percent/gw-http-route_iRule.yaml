@@ -1,0 +1,90 @@
+# 2.28 iRule 우회. native RequestMirror percent/fraction 미적용.
+# /percent /fraction 모두 50%. rand() < 0.5 이면 HSL 로 tea-pool.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: request-mirror-percent-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-request-mirror-percent
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      if { [HTTP::path] starts_with "/percent" || [HTTP::path] starts_with "/fraction" } {
+        if { [expr {rand() < 0.5}] } {
+          set hsl [HSL::open -proto TCP -pool web-pool-tea-pool-pool]
+          HSL::send $hsl [HTTP::request]
+        }
+      }
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-request-mirror-percent
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-request-mirror-percent
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

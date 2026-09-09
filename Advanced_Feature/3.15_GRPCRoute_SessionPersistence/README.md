@@ -53,3 +53,16 @@ kubectl apply -f gw-grpc-route.yaml
 ```bash
 kubectl delete -f gw-grpc-route.yaml
 ```
+
+## iRule 우회
+
+네이티브 `sessionPersistence` 는 CRD 스키마 거부. `gw-grpc-route_iRule.yaml` 은 2.43 과 같이 Cookie → `pool`. grpcurl 은 `-H 'cookie: BNKSESSION=coffee'`. Set-Cookie 가 h2 응답에 붙는지는 live.  
+네이티브 YAML 과 같이 apply 하지 않는다.
+
+```bash
+kubectl apply -f gw-grpc-route_iRule.yaml
+```
+
+```bash
+kubectl delete -f gw-grpc-route_iRule.yaml
+```

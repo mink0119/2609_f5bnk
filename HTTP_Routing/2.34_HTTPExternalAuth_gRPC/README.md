@@ -38,3 +38,5 @@ kubectl delete -f gw-http-route.yaml
 ## 참고
 
 auth 백엔드는 Envoy ext_authz gRPC를 말해야 합니다.
+
+iRule로는 불가. iRule은 Envoy ext_authz `CheckRequest`/`CheckResponse` protobuf gRPC 클라이언트가 아니다. 2.33과 같이 별도 인증 연결(SIDEBAND)도 이 TMM에서 검증된 적 없다.

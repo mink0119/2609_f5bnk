@@ -1,0 +1,112 @@
+# 2.39 iRule 우회. backend 는 hostname 으로 나눔 (IP 만 보면 동일 IP 다른 port 를 구분 못 함).
+# 타이머는 HTTP_REQUEST (요청 진입) → HTTP_RESPONSE 에서 cancel. LB_SELECTED 는 요청 시점이 아님.
+# coffee.f5bnk.com 만 after 5000. HTTP::respond 는 after 콜백에서 무시 → TCP::respond 504.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: timeout-backend-coffee
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: timeout-backend-tea
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - tea.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: tea-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-timeout-backend
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set req_host [string tolower [getfield [HTTP::host] ":" 1]]
+      if { $req_host eq "coffee.f5bnk.com" } {
+        set be_to [after 5000 {
+          TCP::respond "HTTP/1.1 504 Gateway Timeout\r\nContent-Type: text/plain\r\nContent-Length: 17\r\nConnection: close\r\n\r\nbackend timeout\n"
+          TCP::close
+        }]
+      }
+    }
+    when HTTP_RESPONSE {
+      catch { after cancel $be_to }
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-timeout-backend
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-timeout-backend
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

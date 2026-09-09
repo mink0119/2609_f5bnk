@@ -81,3 +81,18 @@ kubectl delete -f gw-grpc-route.yaml
 ## live 결과
 
 Accepted=True. grpcurl `-H env:` 메타데이터는 백엔드 로그에 도달했으나 모든 RPC가 첫 rule(canary). gRPC header iRule 없음.
+
+## iRule 우회
+
+네이티브 `matches.headers` 미적용. `gw-grpc-route_iRule.yaml` 은 `HTTP::header env` Exact `canary` → httpbin-pool, `regexp ^canary-.*$` → tea-pool, 그 외 coffee-pool.  
+네이티브 YAML 과 같이 apply 하지 않는다.
+
+```bash
+kubectl apply -f gw-grpc-route_iRule.yaml
+```
+
+클라이언트 검증은 위와 동일.
+
+```bash
+kubectl delete -f gw-grpc-route_iRule.yaml
+```

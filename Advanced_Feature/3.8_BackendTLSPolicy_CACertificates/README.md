@@ -82,3 +82,5 @@ The plain HTTP request was sent to HTTPS port
 ```bash
 kubectl delete -f gw-backend-tls.yaml
 ```
+
+iRule로는 불가. ConfigMap CA bundle로 upstream 인증서를 검증하는 것은 TLS 프로파일 영역이다. iRule이 CA를 로드하거나 백엔드 핸드셰이크를 수행하지 않는다.

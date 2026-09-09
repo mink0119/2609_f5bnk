@@ -1,3 +1,5 @@
-grpcio
-grpcio-tools
-protobuf
+# Pinned to live 192.168.48.254 /opt/poc/pydeps (2026-09)
+grpcio==1.83.1
+grpcio-tools==1.83.1
+protobuf==7.36.1
+typing_extensions==4.16.0

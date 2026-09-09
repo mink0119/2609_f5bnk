@@ -15,7 +15,7 @@
 ./gen-poc-certs.sh
 ```
 
-HTTP 2.x 테스트가 끝난 뒤에만 백엔드에 복사합니다. `coffee.conf` 는 덮어쓰지 않습니다.
+HTTP 2.x 테스트가 끝난 뒤에만 백엔드에 복사합니다. `coffee.conf` 는 덮어쓰지 않습니다. 서버 전체 재설치는 **`../INSTALL.md`**.
 
 ```bash
 # later, on 192.168.48.254

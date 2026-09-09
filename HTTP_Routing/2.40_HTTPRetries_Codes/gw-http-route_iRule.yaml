@@ -1,0 +1,88 @@
+# 2.40 iRule 우회. native retry.codes 미적용. HTTP::retry 스모크.
+# TMM HTTP::retry 는 원요청 문자열 필수. HTTP_REQUEST 에서 HTTP::request 저장 후 HTTP::retry $req.
+# 500/502/503/504 만 1회 retry. 404 는 즉시 반환. 2.38 after 가드와 별개이나 retry 는 그 다음.
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: http-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: HTTP
+      port: 80
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: HTTPRoute
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: retry-codes-irule-route
+  namespace: web
+spec:
+  parentRefs:
+    - name: http-gw
+      sectionName: bnk-listener
+  hostnames:
+    - coffee.f5bnk.com
+  rules:
+    - backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 80
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-retry-codes
+  namespace: web
+spec:
+  iRule: |
+    when HTTP_REQUEST {
+      set req [HTTP::request]
+      if { ![info exists retries] } {
+        set retries 0
+      }
+    }
+    when HTTP_RESPONSE {
+      set st [HTTP::status]
+      if { ($st == 500 || $st == 502 || $st == 503 || $st == 504) && $retries < 1 } {
+        incr retries
+        HTTP::retry $req
+        return
+      }
+      set retries 0
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-retry-codes
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-retry-codes
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: http-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

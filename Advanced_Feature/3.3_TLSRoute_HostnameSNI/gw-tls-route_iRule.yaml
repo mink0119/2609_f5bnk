@@ -1,0 +1,169 @@
+# 3.3 iRule 우회. TLSRoute / HTTPS listener hostname SNI 인증서 선택은 미적용 (last-wins).
+# L4 TCP :443 + L4Route 패스스루. CLIENT_DATA 에서 ClientHello SNI 파싱 후 pool.
+# iRule 은 ServerHello/인증서를 만들지 않음. 인증서는 백엔드 coffee.crt / tea.crt.
+# TMM pool 이름: web-pool-<Pool.name>-pool
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: tls-gw
+  namespace: web
+spec:
+  gatewayClassName: f5-bnk-gateway-class
+  addresses:
+    - type: IPAddress
+      value: 40.30.20.20
+  listeners:
+    - name: bnk-listener
+      protocol: TCP
+      port: 443
+      allowedRoutes:
+        namespaces:
+          from: All
+        kinds:
+          - kind: L4Route
+            group: gateway.k8s.f5net.com
+---
+apiVersion: gateway.k8s.f5net.com/v1
+kind: L4Route
+metadata:
+  name: tls-sni-irule-route
+  namespace: web
+spec:
+  protocol: TCP
+  parentRefs:
+    - name: tls-gw
+      sectionName: bnk-listener
+  rules:
+    - backendRefs:
+        - name: coffee-pool
+          kind: Pool
+          group: k8s.f5net.com
+          weight: 1
+        - name: tea-pool
+          kind: Pool
+          group: k8s.f5net.com
+          weight: 1
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: coffee-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.10"
+      port: 443
+---
+apiVersion: k8s.f5net.com/v1
+kind: Pool
+metadata:
+  name: tea-pool
+  namespace: web
+spec:
+  members:
+    - address: "30.0.0.11"
+      port: 443
+---
+apiVersion: k8s.f5net.com/v1
+kind: F5BigCneIrule
+metadata:
+  name: irule-tls-sni
+  namespace: web
+spec:
+  iRule: |
+    when CLIENT_ACCEPTED {
+      TCP::collect 5
+    }
+    when CLIENT_DATA {
+      if { [TCP::payload length] < 5 } {
+        return
+      }
+      binary scan [TCP::payload] cSS rtype rver rlen
+      set rlen [expr {$rlen & 0xffff}]
+      if { $rtype != 22 } {
+        TCP::release
+        return
+      }
+      set need [expr {5 + $rlen}]
+      if { [TCP::payload length] < $need } {
+        TCP::collect [expr {$need - [TCP::payload length]}]
+        return
+      }
+      set payload [TCP::payload]
+      set sni ""
+      binary scan $payload @5c hstype
+      if { $hstype != 1 } {
+        TCP::release
+        return
+      }
+      set offset 43
+      if { [binary scan $payload @${offset}c sidlen] != 1 } {
+        TCP::release
+        return
+      }
+      set offset [expr {$offset + 1 + ($sidlen & 0xff)}]
+      if { [binary scan $payload @${offset}S clen] != 1 } {
+        TCP::release
+        return
+      }
+      set offset [expr {$offset + 2 + ($clen & 0xffff)}]
+      if { [binary scan $payload @${offset}c complen] != 1 } {
+        TCP::release
+        return
+      }
+      set offset [expr {$offset + 1 + ($complen & 0xff)}]
+      if { [binary scan $payload @${offset}S extlen] != 1 } {
+        TCP::release
+        return
+      }
+      set extlen [expr {$extlen & 0xffff}]
+      set offset [expr {$offset + 2}]
+      set end [expr {$offset + $extlen}]
+      set plen [string length $payload]
+      if { $end > $plen } {
+        set end $plen
+      }
+      while { ($offset + 4) <= $end } {
+        if { [binary scan $payload @${offset}SS etype elen] != 2 } {
+          break
+        }
+        set etype [expr {$etype & 0xffff}]
+        set elen [expr {$elen & 0xffff}]
+        set offset [expr {$offset + 4}]
+        if { $etype == 0 && $elen >= 5 } {
+          if { [binary scan $payload @[expr {$offset + 3}]S nlen] == 1 } {
+            set nlen [expr {$nlen & 0xffff}]
+            if { $nlen > 0 && ($offset + 5 + $nlen) <= $plen } {
+              binary scan $payload @[expr {$offset + 5}]a${nlen} sni
+            }
+          }
+          break
+        }
+        set offset [expr {$offset + $elen}]
+      }
+      if { $sni eq "coffee.f5bnk.com" } {
+        pool web-pool-coffee-pool-pool
+      } elseif { $sni eq "tea.f5bnk.com" } {
+        pool web-pool-tea-pool-pool
+      } else {
+        reject
+        return
+      }
+      TCP::release
+    }
+---
+apiVersion: gateway.k8s.f5net.com/v1alpha1
+kind: BNKNetPolicy
+metadata:
+  name: netpolicy-tls-sni
+  namespace: web
+spec:
+  extensionRefs:
+    - kind: F5BigCneIrule
+      name: irule-tls-sni
+      group: k8s.f5net.com
+  targetRefs:
+    - kind: Gateway
+      name: tls-gw
+      group: gateway.networking.k8s.io
+      sectionName: bnk-listener

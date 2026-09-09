@@ -132,3 +132,18 @@ curl --resolve grpc.f5bnk.com:80:40.30.20.20 http://grpc.f5bnk.com/
 ```bash
 kubectl delete -f gw-grpc-route.yaml
 ```
+
+## iRule 우회
+
+네이티브 `matches.method` 미적용. `gw-grpc-route_iRule.yaml` 은 `HTTP::path` 로 `/hello.HelloService/SayHello` → coffee-pool, `SayGoodbye` → tea-pool (`pool web-pool-*-pool`, 2.5 과 동일). HTTP/2 `:path` 가 `HTTP::path` 로 보이는지는 live.  
+네이티브 YAML 과 같이 apply 하지 않는다.
+
+```bash
+kubectl apply -f gw-grpc-route_iRule.yaml
+```
+
+클라이언트 검증(VIP SayHello / SayGoodbye)은 위와 동일.
+
+```bash
+kubectl delete -f gw-grpc-route_iRule.yaml
+```

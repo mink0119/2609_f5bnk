@@ -83,3 +83,5 @@ The plain HTTP request was sent to HTTPS port
 ```bash
 kubectl delete -f gw-backend-tls.yaml
 ```
+
+iRule로는 불가. system trust store(`wellKnownCACertificates: System`)는 TMM/OS CA 저장소이고, iRule이 그 저장소로 백엔드 인증서를 검증하지 않는다.

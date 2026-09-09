@@ -104,3 +104,5 @@ The plain HTTP request was sent to HTTPS port
 ```bash
 kubectl delete -f gw-backend-tls.yaml
 ```
+
+iRule로는 불가. iRule은 백엔드 TLS 핸드셰이크를 열고 hostname/SAN을 검증하거나 CA bundle을 제시할 수 없다. 재암호화는 VS server-ssl 프로파일/컨트롤러 영역이며, `SSL::*`로 BackendTLSPolicy를 대체하지 않는다.

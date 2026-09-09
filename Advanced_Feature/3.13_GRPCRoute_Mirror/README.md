@@ -60,3 +60,5 @@ kubectl delete -f gw-grpc-route.yaml
 ## live 결과
 
 Accepted=True. 10 RPC client는 모두 coffee. tea:50051 미러 0. gRPC mirror iRule 없음.
+
+iRule로는 불가. HTTP 2.27 HSL 복사는 HTTP/1 바이트이다. gRPC는 HTTP/2 DATA 프레임이라 tea:50051 gRPC 서버가 HSL TCP 복사를 요청으로 파싱하지 못한다. SIDEBAND h2 미러도 이 TMM에서 없다.
