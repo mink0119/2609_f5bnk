@@ -1,5 +1,7 @@
-# 3.15 iRule 우회. native GRPCRoute sessionPersistence 는 CRD 스키마 거부.
-# 2.43 과 같이 Cookie→pool. gRPC 는 -H 'cookie: BNKSESSION=coffee'.
+# 3.15 iRule 우회. persist carp. persist 테이블/DSSM 불필요.
+# native GRPCRoute sessionPersistence 는 CRD 스키마 거부.
+# X-Session-ID 값을 해시 키로 같은 멤버. coffee+tea 를 한 Pool 에 둠.
+# pool 명령 / 멤버 IP 직접 지정 아님. 네이티브와 같이 apply 하지 않는다.
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
 metadata:
@@ -23,7 +25,7 @@ spec:
 apiVersion: gateway.networking.k8s.io/v1
 kind: GRPCRoute
 metadata:
-  name: grpc-session-irule-route
+  name: grpc-session-carp-irule-route
   namespace: web
 spec:
   parentRefs:
@@ -33,75 +35,43 @@ spec:
     - grpc.f5bnk.com
   rules:
     - backendRefs:
-        - name: coffee-pool
+        - name: session-pool
           kind: Pool
           group: k8s.f5net.com
-          weight: 1
-        - name: tea-pool
-          kind: Pool
-          group: k8s.f5net.com
-          weight: 1
 ---
 apiVersion: k8s.f5net.com/v1
 kind: Pool
 metadata:
-  name: coffee-pool
+  name: session-pool
   namespace: web
 spec:
   members:
     - address: "30.0.0.10"
       port: 50051
----
-apiVersion: k8s.f5net.com/v1
-kind: Pool
-metadata:
-  name: tea-pool
-  namespace: web
-spec:
-  members:
     - address: "30.0.0.11"
       port: 50051
 ---
 apiVersion: k8s.f5net.com/v1
 kind: F5BigCneIrule
 metadata:
-  name: irule-grpc-session
+  name: irule-grpc-session-header-carp
   namespace: web
 spec:
   iRule: |
     when HTTP_REQUEST {
-      set have_sess 0
-      set ck [HTTP::header "Cookie"]
-      if { $ck contains "BNKSESSION=tea" } {
-        set have_sess 1
-        pool web-pool-tea-pool-pool
-      } elseif { $ck contains "BNKSESSION=coffee" } {
-        set have_sess 1
-        pool web-pool-coffee-pool-pool
-      }
-    }
-    when LB_SELECTED {
-      set persist_member [LB::server addr]
-    }
-    when HTTP_RESPONSE {
-      if { $have_sess == 0 } {
-        if { $persist_member eq "30.0.0.10" } {
-          HTTP::header insert "Set-Cookie" "BNKSESSION=coffee; Path=/; Max-Age=3600"
-        } elseif { $persist_member eq "30.0.0.11" } {
-          HTTP::header insert "Set-Cookie" "BNKSESSION=tea; Path=/; Max-Age=3600"
-        }
-      }
+      set sid [HTTP::header "X-Session-ID"]
+      persist carp $sid
     }
 ---
 apiVersion: gateway.k8s.f5net.com/v1alpha1
 kind: BNKNetPolicy
 metadata:
-  name: netpolicy-grpc-session
+  name: netpolicy-grpc-session-header-carp
   namespace: web
 spec:
   extensionRefs:
     - kind: F5BigCneIrule
-      name: irule-grpc-session
+      name: irule-grpc-session-header-carp
       group: k8s.f5net.com
   targetRefs:
     - kind: Gateway

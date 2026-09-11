@@ -38,11 +38,9 @@ spec:
 
   rules:
     - sessionPersistence:
-        sessionName: BNKSESSION
-        type: Cookie
+        sessionName: X-Session-ID
+        type: Header
         absoluteTimeout: 3600s
-        cookieConfig:
-          lifetimeType: Permanent
 
       backendRefs:
         - name: coffee-pool

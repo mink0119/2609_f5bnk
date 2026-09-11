@@ -698,7 +698,7 @@
 - 세부항목: sessionPersistence
 - 설명: Cookie 또는 Header 기반으로 gRPC 세션을 동일 backend에 고정
 - F5 지원: x
-- 테스트 시나리오(명세파일 등): 쿠키 발급 후 동일 쿠키 재전송 시 동일 backend 고정 여부 확인
+- 테스트 시나리오(명세파일 등): X-Session-ID 헤더 CARP. 값 1–9 분산, 같은 값 20회 동일 멤버
 - 공식 출처: Experimental/Extended | https://gateway-api.sigs.k8s.io/geps/gep-1619/
 - 특이사항: https://clouddocs.f5.com/bigip-next-for-kubernetes/latest/custom-resource-definitions/bnk-gateway-api-grpcroute.html 
   GPRC mutilple rule 미지원 
