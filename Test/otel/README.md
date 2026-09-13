@@ -198,7 +198,7 @@ VS/PoC pool 은 Gateway(`2.1`) 후. CPU 축 0–10% (유휴 ~1%).
 
 **OTEL에 없다.** [카탈로그](https://clouddocs.f5.com/bigip-next-for-kubernetes/latest/observability/spk-otel-stats.html) 에 profile_http / clientssl / URI / method / TLS version 테이블이 없고 default scrape 에도 없다. 있는 TCP 는 `profile_tcp_stat` (open/accepts/rtt 등) 뿐. Prometheus 의 `f5_grpc_*` 는 Observer 컨트롤플레인이지 GRPCRoute 트래픽이 아니다.
 
-멤버 health(up/down)·HTTPRoute path→pool 도 메트릭 없음 (`OPS-CHECKLIST` §2).
+멤버 health(up/down)·HTTPRoute path→pool 도 메트릭 없음.
 
 ### PoC 시트
 
