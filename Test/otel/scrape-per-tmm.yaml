@@ -1,0 +1,31 @@
+# VS / pool / TCP / RST 를 TMM Pod 단위(Diagnostic)로 추가 수집.
+# FLO default 템플릿(Aggregated = 두 TMM 합)은 그대로 둔다.
+apiVersion: metrics.f5.net/v1alpha1
+kind: ScrapeTemplate
+metadata:
+  name: poc-per-tmm
+  namespace: f5-cne-core
+spec:
+  scrapeClass: default-scrape-class
+  suspend: false
+  jobs:
+    - name: poc-virtual-server-stat
+      table: virtual_server_stat
+      aggregation: Diagnostic
+      every: 1m0s
+      timeout: 1m0s
+    - name: poc-pool-member-stat
+      table: pool_member_stat
+      aggregation: Diagnostic
+      every: 1m0s
+      timeout: 1m0s
+    - name: poc-profile-tcp-stat
+      table: profile_tcp_stat
+      aggregation: Diagnostic
+      every: 1m0s
+      timeout: 1m0s
+    - name: poc-rst-cause-stat
+      table: rst_cause_stat
+      aggregation: Diagnostic
+      every: 1m0s
+      timeout: 1m0s

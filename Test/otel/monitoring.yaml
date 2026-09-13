@@ -1,0 +1,200 @@
+# Prometheus + Grafana (FLO/Helm 아님). OTEL :9090 을 scrape.
+# 적용: kubectl apply -f monitoring.yaml
+# 대시보드: kubectl create configmap grafana-bnk-dashboard -n monitoring \
+#   --from-file=bnk-poc-ops.json=bnk-poc-ops.json --dry-run=client -o yaml | kubectl apply -f -
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: monitoring
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: prometheus-client
+  namespace: monitoring
+spec:
+  commonName: prometheus
+  secretName: prometheus-client-secret
+  issuerRef:
+    name: f5-bnk-ca-cluster-issuer
+    kind: ClusterIssuer
+  duration: 2160h
+  privateKey:
+    rotationPolicy: Always
+    encoding: PKCS1
+    algorithm: RSA
+    size: 4096
+  usages: [digital signature, key encipherment, client auth]
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: prometheus-config
+  namespace: monitoring
+data:
+  prometheus.yml: |
+    global:
+      scrape_interval: 15s
+      evaluation_interval: 15s
+    scrape_configs:
+      - job_name: bnk-otel
+        scheme: https
+        static_configs:
+          - targets:
+              - otel-collector-svc.f5-cne-core.svc.cluster.local:9090
+        tls_config:
+          cert_file: /etc/prometheus/certs/tls.crt
+          key_file: /etc/prometheus/certs/tls.key
+          ca_file: /etc/prometheus/certs/ca.crt
+          insecure_skip_verify: true
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: prometheus
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: prometheus}
+  template:
+    metadata:
+      labels: {app: prometheus}
+    spec:
+      containers:
+        - name: prometheus
+          image: prom/prometheus
+          imagePullPolicy: Always
+          args:
+            - --storage.tsdb.retention.time=6h
+            - --storage.tsdb.path=/prometheus
+            - --config.file=/etc/prometheus/prometheus.yml
+          ports:
+            - {name: web, containerPort: 9090}
+          readinessProbe:
+            httpGet: {path: /-/ready, port: web}
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          volumeMounts:
+            - {name: config, mountPath: /etc/prometheus}
+            - {name: certs, mountPath: /etc/prometheus/certs, readOnly: true}
+            - {name: storage, mountPath: /prometheus}
+      volumes:
+        - name: config
+          configMap: {name: prometheus-config}
+        - name: certs
+          secret: {secretName: prometheus-client-secret}
+        - name: storage
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: prometheus-service
+  namespace: monitoring
+spec:
+  selector: {app: prometheus}
+  type: NodePort
+  ports:
+    - {name: web, port: 9090, targetPort: web, nodePort: 31929}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-datasources
+  namespace: monitoring
+data:
+  prometheus.yaml: |
+    apiVersion: 1
+    datasources:
+      - name: Prometheus
+        uid: prometheus
+        type: prometheus
+        access: proxy
+        url: http://prometheus-service.monitoring.svc.cluster.local:9090
+        isDefault: true
+        editable: true
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grafana-dashboard-provider
+  namespace: monitoring
+data:
+  dashboards.yaml: |
+    apiVersion: 1
+    providers:
+      - name: BNK
+        orgId: 1
+        folder: BNK
+        type: file
+        disableDeletion: false
+        editable: true
+        options:
+          path: /var/lib/grafana/dashboards
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: grafana-admin
+  namespace: monitoring
+type: Opaque
+stringData:
+  password: "ncurity1@#"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  replicas: 1
+  selector:
+    matchLabels: {app: grafana}
+  template:
+    metadata:
+      labels: {app: grafana}
+    spec:
+      containers:
+        - name: grafana
+          image: grafana/grafana
+          imagePullPolicy: Always
+          ports:
+            - {name: web, containerPort: 3000}
+          env:
+            - {name: GF_SECURITY_ADMIN_USER, value: admin}
+            - name: GF_SECURITY_ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef: {name: grafana-admin, key: password}
+          readinessProbe:
+            httpGet: {path: /api/health, port: web}
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests: {cpu: 250m, memory: 256Mi}
+            limits: {cpu: "1", memory: 1Gi}
+          volumeMounts:
+            - {name: storage, mountPath: /var/lib/grafana}
+            - {name: datasources, mountPath: /etc/grafana/provisioning/datasources, readOnly: true}
+            - {name: providers, mountPath: /etc/grafana/provisioning/dashboards, readOnly: true}
+            - {name: dashboards, mountPath: /var/lib/grafana/dashboards, readOnly: true}
+      volumes:
+        - name: storage
+          emptyDir: {}
+        - name: datasources
+          configMap: {name: grafana-datasources}
+        - name: providers
+          configMap: {name: grafana-dashboard-provider}
+        - name: dashboards
+          configMap: {name: grafana-bnk-dashboard}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: grafana
+  namespace: monitoring
+spec:
+  selector: {app: grafana}
+  type: NodePort
+  ports:
+    - {name: web, port: 3000, targetPort: web, nodePort: 32000}

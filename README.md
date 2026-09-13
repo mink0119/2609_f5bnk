@@ -111,6 +111,13 @@ Advanced_Feature/                 # 3.x
   3.1_CrossNamespace_From/
     gw-http-route.yaml
     README.md
+Test/                             # 시트 밖 추가 검증
+  README.md
+  otel/
+    README.md                     # OTEL → Prometheus/Grafana
+    monitoring.yaml               # Prometheus + Grafana (FLO/Helm 아님)
+    scrape-per-tmm.yaml           # VS/pool/TCP Diagnostic (TMM Pod별)
+    bnk-poc-ops.json              # Grafana 대시보드 BNK PoC / Ops
 ```
 
 - 폴더명: `{번호}_{기능약칭}` — 번호는 명세와 동일
