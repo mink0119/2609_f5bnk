@@ -7,6 +7,49 @@ F5 BNK에서 Gateway API v1.6 기능을 항목 단위로 검증하는 저장소�
 F5 지원(G)·특이사항(K)은 Google Sheet 테스트 결과를 그 파일에 반영한 값입니다.  
 항목을 추가·수정할 때는 그 파일의 해당 번호를 먼저 읽고, 번호와 폴더가 어긋나지 않게 맞춥니다.
 
+## 환경 버전
+
+항목 검증을 시작하기 전에 Gateway API CRD 번들과 BNK `CNEInstance` 버전을 확인한다.  
+명세 기준은 `F5_Gateway_API_KO_apigw_v1.6.md` 첫 줄의 `bnk:v2.3, gw api:v1.6` 이다.
+
+### 확인 명령
+
+Gateway API:
+
+```bash
+kubectl get crd gateways.gateway.networking.k8s.io \
+  -o jsonpath='bundle-version={.metadata.annotations.gateway\.networking\.k8s\.io/bundle-version}{"\n"}channel={.metadata.annotations.gateway\.networking\.k8s\.io/channel}{"\n"}'
+```
+
+BNK:
+
+```bash
+kubectl get cneinstance -n f5-bnk-instance f5-cne-controller \
+  -o jsonpath='type={.spec.product.type}{"\n"}gatewayAPI={.spec.product.gatewayAPI}{"\n"}manifestVersion={.spec.manifestVersion}{"\n"}'
+```
+
+FLO Helm (참고):
+
+```bash
+helm list -A
+```
+
+`manifestVersion` 앞자리(`2.3.2`)가 BNK 릴리스다. Helm은 FLO로 올린 랩에서는 operator 차트만 나온다.
+
+### 이번 검증 랩
+
+2026-09-13 클러스터에서 확인한 값이다.
+
+| 항목 | 값 |
+|---|---|
+| Gateway API | `v1.6.1` (`channel=standard`) |
+| BNK | `2.3.2` (`manifestVersion=2.3.2-3.2598.3-0.0.392`) |
+| product | `type=BNK`, `gatewayAPI=true` |
+| CNEInstance | `f5-cne-controller` (`f5-bnk-instance`) |
+| FLO | `f5-lifecycle-operator-v2.21.13-0.0.58` (`f5-cne-core`) |
+
+명세 `gw api:v1.6` / `bnk:v2.3` 과 맞으면 이 랩에서 항목 검증을 진행한다.
+
 ## 작업 방식
 
 한 항목 = 한 폴더 = apply/delete 한 단위입니다.  
@@ -102,6 +145,8 @@ gRPC(3.10–3.15)는 ncurity의 `$HOME/poc-grpc/` (공식 `grpcurl` 바이너리
 - TLS Terminate는 Secret `web-tls-cert`, BackendTLS CA는 ConfigMap `backend-ca` 를 전제로 적습니다. 없으면 README에 선행 조건을 적습니다.
 
 ## 검증 기준
+
+버전 기준은 위 **환경 버전** 절이다. 항목 트래픽 판정은 아래만 쓴다.
 
 - 성공: HTTP 200 + 위 Pool body, 또는 명세가 요구하는 status/Location/header
 - 미매칭: 보통 404
