@@ -20,7 +20,7 @@ NIC 이름이 다르면 netplan 의 `ens33` / `ens160` 만 맞추고 주소는 �
 
 ```bash
 apt-get update
-apt-get install -y nginx python3 python3-pip python3-venv
+apt-get install -y nginx libnginx-mod-http-echo python3 python3-pip python3-venv
 # sites-enabled/default 는 쓰지 않는다. nginx.conf 가 conf.d 만 include.
 rm -f /etc/nginx/sites-enabled/default
 ```
@@ -68,8 +68,7 @@ cd /root/poc-backend
 ```bash
 mkdir -p /etc/nginx/conf.d /etc/nginx/poc-certs
 cp nginx.conf /etc/nginx/nginx.conf
-cp conf.d/coffee.conf conf.d/tea.conf conf.d/canary.conf \
-   conf.d/coffee-tls.conf conf.d/tea-tls.conf /etc/nginx/conf.d/
+cp conf.d/*.conf /etc/nginx/conf.d/
 cp poc-delay.py /etc/nginx/poc-delay.py
 chmod +x /etc/nginx/poc-delay.py
 cp poc-slow.txt /etc/nginx/poc-slow.txt
@@ -181,7 +180,8 @@ echo -n ping | nc -u -w 2 30.0.0.10 9053 ; echo
 cp grpc/hello_server.py /opt/poc/grpc/
 systemctl restart poc-grpc@coffee poc-grpc@tea poc-grpc@canary
 
-# nginx vhost
+# nginx vhost + access log (요청 헤더 전체)
+cp nginx.conf /etc/nginx/nginx.conf
 cp conf.d/*.conf /etc/nginx/conf.d/
 nginx -t && systemctl reload nginx
 
